@@ -477,7 +477,7 @@ class Wpr_OnepageNav extends Widget_Base {
 		$this->add_control(
 			'nav_item_bg_color',
 			[
-				'label' => esc_html__( 'Backgound Color', 'wpr-addons' ),
+				'label' => esc_html__( 'Background Color', 'wpr-addons' ),
 				'type' => Controls_Manager::COLOR,
 				'default' => '',
 				'selectors' => [
@@ -536,7 +536,7 @@ class Wpr_OnepageNav extends Widget_Base {
 		$this->add_control(
 			'nav_item_hover_bg_color',
 			[
-				'label' => esc_html__( 'Backgound Color', 'wpr-addons' ),
+				'label' => esc_html__( 'Background Color', 'wpr-addons' ),
 				'type' => Controls_Manager::COLOR,
 				'default' => '',
 				'selectors' => [
@@ -629,7 +629,7 @@ class Wpr_OnepageNav extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .wpr-onepage-active-item i' => 'transform: scale({{SIZE}}); -webkit-transform: scale({{SIZE}});',
 					'{{WRAPPER}} .wpr-onepage-active-item i:before' => 'transform: scale({{SIZE}}); -webkit-transform: scale({{SIZE}});',
-					'{{WRAPPER}} .wpr-onepage-active-item svg' => 'width: {{SIZE}}{{UNIT}};height: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .wpr-onepage-active-item svg' => 'transform: scale({{SIZE}}); -webkit-transform: scale({{SIZE}});',
 				],
 				'condition' => [
 					'nav_item_highlight' => 'yes',

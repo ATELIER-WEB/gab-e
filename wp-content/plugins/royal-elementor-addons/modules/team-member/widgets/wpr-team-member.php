@@ -91,7 +91,7 @@ class Wpr_Team_Member extends Widget_Base {
 				'dynamic' => [
 					'active' => true,
 				],
-				'default' => 'John Doe',
+				'default' => __('John Doe', 'wpr-addons'),
 			]
 		);
 
@@ -123,7 +123,7 @@ class Wpr_Team_Member extends Widget_Base {
 				'dynamic' => [
 					'active' => true,
 				],
-				'default' => 'Sony CEO',
+				'default' => __('Sony CEO', 'wpr-addons'),
 			]
 		);
 
@@ -1051,6 +1051,7 @@ class Wpr_Team_Member extends Widget_Base {
 				'default' => '#605BE5',
 				'selectors' => [
 					'{{WRAPPER}} .wpr-member-social' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .wpr-member-social svg' => 'fill: {{VALUE}}'
 				],
 			]
 		);
@@ -1095,6 +1096,7 @@ class Wpr_Team_Member extends Widget_Base {
 				'default' => '#4A45D2',
 				'selectors' => [
 					'{{WRAPPER}} .wpr-member-social:hover' => 'color: {{VALUE}}',
+					'{{WRAPPER}} .wpr-member-social:hover svg' => 'fill: {{VALUE}}'
 				],
 			]
 		);
@@ -1167,6 +1169,7 @@ class Wpr_Team_Member extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .wpr-member-social' => 'font-size: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .wpr-member-social svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};'
 				],
 				'separator' => 'before',
 			]
@@ -1699,31 +1702,41 @@ class Wpr_Team_Member extends Widget_Base {
 			
 			<?php if ( $settings['social_icon_1']['value'] ) : ?>
 				<a href="<?php echo esc_url( $settings['social_url_1']['url'] ); ?>" <?php echo $this->get_render_attribute_string( 'social_attribute' ); ?>>
-					<i class="<?php echo esc_html( $settings['social_icon_1']['value'] ); ?>"></i>
+					<?php
+						\Elementor\Icons_Manager::render_icon( $settings['social_icon_1'], [ 'aria-hidden' => 'true' ] ); 
+					?>
 				</a>
 			<?php endif; ?>
 		
 			<?php if ( $settings['social_icon_2']['value'] ) : ?>
 				<a href="<?php echo esc_url( $settings['social_url_2']['url'] ); ?>" <?php echo $this->get_render_attribute_string( 'social_attribute' ); ?>>
-					<i class="<?php echo esc_html( $settings['social_icon_2']['value'] ); ?>"></i>
+					<?php
+						\Elementor\Icons_Manager::render_icon( $settings['social_icon_2'], [ 'aria-hidden' => 'true' ] ); 
+					?>
 				</a>
 			<?php endif; ?>
 
 			<?php if ( $settings['social_icon_3']['value'] ) : ?>
 				<a href="<?php echo esc_url( $settings['social_url_3']['url'] ); ?>" <?php echo $this->get_render_attribute_string( 'social_attribute' ); ?>>
-					<i class="<?php echo esc_html( $settings['social_icon_3']['value'] ); ?>"></i>
+					<?php
+						\Elementor\Icons_Manager::render_icon( $settings['social_icon_3'], [ 'aria-hidden' => 'true' ] ); 
+					?>
 				</a>
 			<?php endif; ?>
 
 			<?php if ( $settings['social_icon_4']['value'] ) : ?>
 				<a href="<?php echo esc_url( $settings['social_url_4']['url'] ); ?>" <?php echo $this->get_render_attribute_string( 'social_attribute' ); ?>>
-					<i class="<?php echo esc_html( $settings['social_icon_4']['value'] ); ?>"></i>
+					<?php
+						\Elementor\Icons_Manager::render_icon( $settings['social_icon_4'], [ 'aria-hidden' => 'true' ] ); 
+					?>
 				</a>
 			<?php endif; ?>
 
 			<?php if ( $settings['social_icon_5']['value'] ) : ?>
 				<a href="<?php echo esc_url( $settings['social_url_5']['url'] ); ?>" <?php echo $this->get_render_attribute_string( 'social_attribute' ); ?>>
-					<i class="<?php echo esc_html( $settings['social_icon_5']['value'] ); ?>"></i>
+					<?php
+						\Elementor\Icons_Manager::render_icon( $settings['social_icon_5'], [ 'aria-hidden' => 'true' ] ); 
+					?>
 				</a>
 			<?php endif; ?>
 
@@ -1780,9 +1793,14 @@ class Wpr_Team_Member extends Widget_Base {
 		<div class="wpr-member-content">
 			<?php
 				if ( '' !== $settings['member_name'] && 'below' === $settings['member_name_location'] ) {
-					echo '<'. esc_attr( $settings['member_name_tag'] ) .' class="wpr-member-name">';
+		
+					$tags_whitelist = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'];
+					$member_name_tag = Utilities::validate_html_tags_wl( $settings['member_name_tag'], 'h3', $tags_whitelist );
+
+					echo '<'. esc_attr( $member_name_tag ) .' class="wpr-member-name">';
 						echo wp_kses_post( $settings['member_name'] );
-					echo '</'. esc_attr( $settings['member_name_tag'] ) .'>';
+					echo '</'. esc_attr( $member_name_tag ) .'>';
+
 				}
 			?>
 
@@ -1826,9 +1844,8 @@ class Wpr_Team_Member extends Widget_Base {
 	?>
 
 	<div class="wpr-team-member">
-		
 		<?php if ( '' !== $settings['member_image']['url'] ) : ?>
-			<?php 
+			<?php
 				$image_src = Group_Control_Image_Size::get_attachment_image_src( $settings['member_image']['id'], 'image_size', $settings );
 
 				if ( ! $image_src ) {

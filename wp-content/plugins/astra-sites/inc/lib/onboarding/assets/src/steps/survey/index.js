@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tooltip } from '@brainstormforce/starter-templates-components';
+import Tooltip from '../onboarding-ai/components/tooltip';
 import { __ } from '@wordpress/i18n';
 import { PreviousStepLink, DefaultStep } from '../../components/index';
 import ICONS from '../../../icons';
@@ -148,7 +148,7 @@ const Survey = () => {
 		email: '',
 		wp_user_type: '',
 		build_website_for: '',
-		opt_in: false,
+		opt_in: true,
 	} );
 
 	const updateFormDetails = ( field, value ) => {
@@ -160,8 +160,9 @@ const Survey = () => {
 
 	const setStartFlag = () => {
 		const content = new FormData();
-		content.append( 'action', 'astra-sites-set-start-flag' );
+		content.append( 'action', 'astra-sites-set_start_flag' );
 		content.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
+		content.append( 'template_type', 'classic' );
 
 		fetch( ajaxurl, {
 			method: 'post',
@@ -209,7 +210,7 @@ const Survey = () => {
 			return;
 		}
 
-		if ( ! formDetails.opt_in ) {
+		if ( ! formDetails.opt_in && ! formDetails.email ) {
 			return;
 		}
 
@@ -265,6 +266,28 @@ const Survey = () => {
 					{ __( 'Submit & Build My Website', 'astra-sites' ) }
 					{ ICONS.arrowRight }
 				</button>
+				<p className="subscription-agreement-text text-center mt-4">
+					By clicking { `"Submit & Build My Website"` }, you agree to
+					our{ ' ' }
+					<a
+						className="st-link"
+						href="https://store.brainstormforce.com/terms-and-conditions/"
+						target="_blank"
+						rel="noreferrer"
+					>
+						Terms
+					</a>{ ' ' }
+					and{ ' ' }
+					<a
+						className="st-link"
+						href="https://store.brainstormforce.com/privacy-policy/"
+						target="_blank"
+						rel="noreferrer"
+					>
+						Privacy Policy
+					</a>
+					.
+				</p>
 			</form>
 		);
 	};
@@ -376,6 +399,7 @@ const Survey = () => {
 										<div className="requirement-list-item">
 											{ value.title }
 											<Tooltip
+												interactive={ true }
 												content={
 													<span
 														dangerouslySetInnerHTML={ {
@@ -399,6 +423,7 @@ const Survey = () => {
 										<div className="requirement-list-item">
 											{ value.title }
 											<Tooltip
+												interactive={ true }
 												content={
 													<span
 														dangerouslySetInnerHTML={ {
@@ -536,10 +561,11 @@ const Survey = () => {
 	return (
 		<DefaultStep
 			content={
-				<div className="survey-container"> { defaultStepContent } </div>
-			}
-			actions={
 				<>
+					<div className="survey-container">
+						{ ' ' }
+						{ defaultStepContent }{ ' ' }
+					</div>
 					<PreviousStepLink before>
 						{ __( 'Back', 'astra-sites' ) }
 					</PreviousStepLink>

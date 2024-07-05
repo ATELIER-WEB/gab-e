@@ -1,5 +1,7 @@
 /**
  * Main customize js file
+ * 
+ * This is running inside the Customizer iframe.
  *
  * @package Hestia
  */
@@ -391,26 +393,37 @@
             );
         },
         'focusTab': function () {
-            $( '.customize-partial-edit-shortcut' ).bind(
-                'DOMNodeInserted', function () {
-                    $( this ).on(
-                        'click', function() {
-                            var controlId     = $( this ).attr( 'class' );
-                            var tabToActivate = '';
-                            var controlFinalId = controlId.split( ' ' ).pop().split( '-' ).pop();
+            /**
+             * This will add a click event on customizer shortcuts.
+             * To allow focusing of specific tabs.
+             *
+             * @param mutationsList
+             */
+            var mutationCallback = function(mutationsList) {
+                mutationsList.forEach(function(mutation) {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        Array.prototype.forEach.call(mutation.addedNodes, function(node) {
+                            if (node && node.classList && node.classList.contains('customize-partial-edit-shortcut')) {
+                                node.addEventListener('click', function() {
+                                    var controlId = node.className;
+                                    var controlFinalId = controlId.split(' ').pop().split('-').pop();
 
-                            if ( controlId.indexOf( 'widget' ) !== -1 ) {
-                                tabToActivate = $( '.hestia-customizer-tab>.widgets' );
-                            } else {
-                                tabToActivate      = $( '.hestia-customizer-tab>.' + controlFinalId );
+                                    var tabToActivate = { selector: '.hestia-customizer-tab>.' + controlFinalId };
+                                    if (controlId.indexOf('widget') !== -1) {
+                                        tabToActivate = { selector: '.hestia-customizer-tab>.widgets' };
+                                    }
+
+                                    wp.customize.preview.send('tab-previewer-edit', tabToActivate);
+                                    wp.customize.preview.send('focus-control', controlFinalId);
+                                });
                             }
+                        });
+                    }
+                });
+            };
 
-                            wp.customize.preview.send( 'tab-previewer-edit', tabToActivate );
-                            wp.customize.preview.send( 'focus-control', controlFinalId );
-                        }
-                    );
-                }
-            );
+            var observer = new MutationObserver(mutationCallback);
+            observer.observe(document, { subtree: true, childList: true });
         },
 
         /**
@@ -461,25 +474,34 @@
          * Handle the opening of text editor
          */
         'handleTextEditor': function(){
-            $(document).on('DOMNodeInserted','.customize-partial-edit-shortcut', function() {
-                $( this ).on(
-                    'click', function(){
-                        var controls = ['hestia_contact_content_new'];
-                        var clickedControl = $( this ).attr('class');
-                        var openControl = '';
-                        $.each(controls, function(index, value){
-                            if (clickedControl.indexOf( value ) !== -1){
-                                openControl = value;
-                                return false;
+            var attachClickHandleTextEditorToggle = function ( node ) {
+                    node.addEventListener('click', function() {
+                        if ( node && node.className && node.className.indexOf('customize-partial-edit-shortcut-hestia_contact_content_new') !== -1 ) {
+                            window.wp.customize.preview.send('trigger-open-editor', 'hestia_contact_content_new' );
+                            window.wp.customize.preview.send( 'tab-previewer-edit', { data: '.hestia-customizer-tab>.hestia_contact_content_new' } );
+                            return;
+                        }
+                        window.wp.customize.preview.send('trigger-close-editor' );
+                    }, false );
+            };
+
+            var mutationCallback = function(mutationsList) {
+                mutationsList.forEach(function(mutation) {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        Array.prototype.forEach.call(mutation.addedNodes, function(node) {
+                            if (node && node.classList && node.classList.contains('customize-partial-edit-shortcut')) {
+                                attachClickHandleTextEditorToggle(node);
                             }
                         });
-                        if( openControl !== ''){
-                            wp.customize.preview.send( 'trigger-open-editor', openControl );
-                        } else {
-                            wp.customize.preview.send( 'trigger-close-editor');
-                        }
                     }
-                );
+                });
+            };
+
+            var observer = new MutationObserver(mutationCallback);
+            observer.observe(document, { subtree: true, childList: true });
+            var partialEditElements = document.getElementsByClassName( 'customize-partial-edit-shortcut' );
+            Array.prototype.forEach.call(partialEditElements, function(node) {
+                attachClickHandleTextEditorToggle(node);
             });
         },
 
@@ -1049,7 +1071,6 @@
         var result = 'rgba(' + x + ',' + y + ',' + z + ',' + opacity / 100 + ')';
         return result;
     }
-
 } )( jQuery );
 
 /**
@@ -1178,6 +1199,3 @@ function hestiaSetCss( settings, to ){
         jQuery( settings.selectors ).css( settings.cssProperty, to + 'px' );
     }
 }
-
-
-

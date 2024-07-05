@@ -703,6 +703,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				'condition' => [
 					'slider_show_content' => 'yes',
 				],
+				'render_type' => 'template'
 			]
 		);
 
@@ -945,6 +946,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .wpr-advanced-slider' => 'height: {{SIZE}}{{UNIT}};',
 					'{{WRAPPER}} .wpr-slider-item' => 'height: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .slick-list' => 'height: {{SIZE}}{{UNIT}};'
 				],
 				'separator' => 'before',
 				'condition' => [
@@ -1040,6 +1042,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 					'{{WRAPPER}} .wpr-slider-title' => 'display:{{VALUE}};',
 				],
 				'separator' => 'before',
+				'render_type' => 'template'
 			]
 		);
 
@@ -1082,6 +1085,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .wpr-slider-sub-title' => 'display:{{VALUE}};',
 				],
+				'render_type' => 'template'
 			]
 		);
 
@@ -1124,7 +1128,8 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .wpr-slider-description' => 'display:{{VALUE}};',
 				],
-				'separator' => 'after'
+				'separator' => 'after',
+				'render_type' => 'template'
 			]
 		);
 
@@ -1147,6 +1152,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .wpr-slider-arrow' => 'display:{{VALUE}} !important;',
 				],
+				'render_type' => 'template'
 			]
 		);
 
@@ -1172,6 +1178,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 					'slider_nav' => 'yes',
 				],
 				'separator' => 'after',
+				'render_type' => 'template'
 			]
 		);
 
@@ -1243,6 +1250,17 @@ class Wpr_Advanced_Slider extends Widget_Base {
 		$this->add_control_slider_autoplay_duration();
 
 		$this->add_control_slider_pause_on_hover();
+
+		$this->add_control(
+			'slider_loop',
+			[
+				'label' => esc_html__( 'Infinite Loop', 'wpr-addons' ),
+				'type' => Controls_Manager::SWITCHER,
+				'default' => 'yes',
+				'frontend_available' => true,
+				'separator' => 'before',
+			]
+		);
 
 		$this->add_control_slider_effect();
 
@@ -2830,6 +2848,14 @@ class Wpr_Advanced_Slider extends Widget_Base {
 			return '';
 		}
 
+		if ( defined('ICL_LANGUAGE_CODE') ) {
+			$default_language_code = apply_filters('wpml_default_language', null);
+
+			if ( ICL_LANGUAGE_CODE !== $default_language_code ) {
+				$id = icl_object_id($id, 'elementor_library', false, ICL_LANGUAGE_CODE);
+			}
+		}
+
 		$edit_link = '<span class="wpr-template-edit-btn" data-permalink="'. esc_url(get_permalink( $id )) .'">Edit Template</span>';
 		
 		$type = get_post_meta(get_the_ID(), '_wpr_template_type', true);
@@ -2841,13 +2867,18 @@ class Wpr_Advanced_Slider extends Widget_Base {
 	public function render_pro_element_slider_scroll_btn() {}
 
 	protected function render() {
-		$settings = $this->get_settings();
+		$settings = $this->get_settings_for_display();
 		$slider_html = '';
 		$item_count = 0;
 
 		if ( empty( $settings['slider_items'] ) ) {
 			return;
 		}
+
+		$tags_whitelist = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'];
+
+		$settings_slider_title_tag = Utilities::validate_html_tags_wl( $settings['slider_title_tag'], 'h2', $tags_whitelist );
+		$settings_slider_sub_title_tag = Utilities::validate_html_tags_wl( $settings['slider_sub_title_tag'], 'h3', $tags_whitelist );
 		
 		foreach ( $settings['slider_items'] as $key => $item ) {
 
@@ -2855,8 +2886,11 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				break;
 			}
 
+			$item_slider_title_tag = Utilities::validate_html_tags_wl( $item['slider_title_tag'], 'h2', $tags_whitelist );
+			$item_slider_sub_title_tag = Utilities::validate_html_tags_wl( $item['slider_sub_title_tag'], 'h3', $tags_whitelist );
+
 			if ( ! wpr_fs()->can_use_premium_code() ) {
-				if ( 'pro-3' == $settings['slider_amount'] || 'pro-4' == $settings['slider_amount'] || 'pro-5' == $settings['slider_amount'] || 'pro-6' == $settings['slider_amount'] ) {
+				if ( in_array( $settings['slider_amount'], ['pro-3', 'pro-4', 'pro-5', 'pro-6'] ) ) {
 					$settings['slider_amount'] = 2;
 				}
 
@@ -2879,16 +2913,17 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				}
 
 				$item_type = $item['slider_item_link_type'];
-				$item_url = $item['slider_item_bg_image_url']['url'];
-				$btn_url_1 = $item['slider_item_btn_url_1']['url'];
+				$item_url = isset($item['slider_item_bg_image_url']) ? $item['slider_item_bg_image_url']['url'] : '';
+				$btn_url_1 = isset($item['slider_item_btn_url_1']) ? $item['slider_item_btn_url_1']['url'] : '';
 				$btn_element_1 = 'div';
 				$btn_attribute_1 = '';
-				$icon_html_1 = $item['slider_item_btn_text_1'];
-				$btn_url_2 = $item['slider_item_btn_url_2']['url'];
+				$icon_html_1 = esc_attr($item['slider_item_btn_text_1']);
+				$btn_url_2 = isset($item['slider_item_btn_url_2']) ? $item['slider_item_btn_url_2']['url'] : '';
 				$btn_element_2 = 'div';
 				$btn_attribute_2 = '';
 				$icon_html_2 = $item['slider_item_btn_text_2'];
 				$ken_burn_class = '';
+
 				if( isset($item['slider_item_bg_image']['source']) && $item['slider_item_bg_image']['source'] == 'url' ) {
 					$item_bg_image_url = $item['slider_item_bg_image']['url'];
 				} else {
@@ -2896,20 +2931,20 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				}
 
 				$item_video_src = $item['slider_item_video_src'];
-				$item_video_start = $item['slider_item_video_start'];
-				$item_video_end = $item['slider_item_video_end'];
+				$item_video_start = esc_attr($item['slider_item_video_start']);
+				$item_video_end = esc_attr($item['slider_item_video_end']);
 
 				if ( $item_type === 'video-media' ) {
 					$item_video_src = $item['hosted_url']['url'];
 				}
 
-				if ( '' !== $item['slider_item_btn_icon_1']['value'] ) {
+				if ( isset($item['slider_item_btn_icon_1']) && '' !== $item['slider_item_btn_icon_1']['value'] ) {
 					ob_start();
 					Icons_Manager::render_icon( $item['slider_item_btn_icon_1'], [ 'aria-hidden' => 'true' ] );
 					$icon_html_1 .= ob_get_clean();
 				}
 
-				if ( '' !== $item['slider_item_btn_icon_2']['value'] ) {
+				if ( isset($item['slider_item_btn_icon_2']) && '' !== $item['slider_item_btn_icon_2']['value'] ) { // me vpikrob es jobia ak - isset($item['slider_item_btn_icon_2']['value']
 					ob_start();
 					Icons_Manager::render_icon( $item['slider_item_btn_icon_2'], [ 'aria-hidden' => 'true' ] );
 					$icon_html_2 .= ob_get_clean();	
@@ -2920,20 +2955,21 @@ class Wpr_Advanced_Slider extends Widget_Base {
 					$ken_burn_class = ' wpr-ken-burns-'. $item['slider_item_bg_zoom'];
 				}
 
-				$this->add_render_attribute( 'slider_item'. $item_count, 'class', 'wpr-slider-item elementor-repeater-item-'. $item['_id'] );
+				$this->add_render_attribute( 'slider_item'. $item_count, 'class', 'wpr-slider-item elementor-repeater-item-'. esc_attr($item['_id']) );
 
 				if ( strpos( $item_type, 'video' ) !== false && ! empty( $item_video_src ) ) {
 
 					$this->add_render_attribute( 'slider_item'. $item_count, 'class', 'wpr-slider-video-item' );
-
-					$this->add_render_attribute( 'slider_item'. $item_count, 'data-video-autoplay', $item['slider_item_video_autoplay'] );
+					$this->add_render_attribute( 'slider_item' . $item_count, 'data-video-autoplay', esc_attr($item['slider_item_video_autoplay']) );
 
 					if ( $item_type === 'video-youtube' ) {
 
 						
 						preg_match('![?&]{1}v=([^&]+)!', $item_video_src, $item_video_id );
 
-						$item_bg_image_url = 'https://i.ytimg.com/vi_webp/'. $item_video_id[1] .'/maxresdefault.webp';
+						if ( empty($item_bg_image_url) ) {
+							$item_bg_image_url = 'https://i.ytimg.com/vi_webp/'. $item_video_id[1] .'/maxresdefault.webp';
+						}
 						
 						if ( 'yes' === $item['slider_item_video_autoplay'] ) {
 							// GOGA - if there is no way to autoplay with api we need mute=1 for this purpose
@@ -2996,7 +3032,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 							$this->add_render_attribute( 'slider_item'. $item_count, 'data-video-controls', $item_video_controls );
 					}
 
-					$this->add_render_attribute( 'slider_item'. $item_count, 'data-video-src', $item_video_src );
+					$this->add_render_attribute( 'slider_item'. $item_count, 'data-video-src', esc_url($item_video_src) );
 				}
 
 				$slider_item_attribute = $this->get_render_attribute_string( 'slider_item'. $item_count );
@@ -3035,12 +3071,15 @@ class Wpr_Advanced_Slider extends Widget_Base {
 				}
 
 				if ( $settings['slider_content_animation'] !== 'none' ) {
+					$slider_content_anim_size = esc_attr($settings['slider_content_anim_size']);
+					$slider_content_animation = esc_attr($settings['slider_content_animation']);
+
 					if ( $slider_amount === 1 ) {
 						$this->add_render_attribute( 'slider_container'. $item_count, 'class', 'wpr-slider-animation' );
-						$this->add_render_attribute( 'slider_outer'. $item_count, 'class', 'wpr-anim-transparency wpr-anim-size-'. $settings['slider_content_anim_size'] .' wpr-overlay-'. $settings['slider_content_animation'] );
+						$this->add_render_attribute( 'slider_outer'. $item_count, 'class', 'wpr-anim-transparency wpr-anim-size-'. $slider_content_anim_size .' wpr-overlay-'. $slider_content_animation );
 					} elseif ( !empty( $item_bg_image_url ) && $item['slider_item_video_autoplay'] !== 'yes' ) {
 						$this->add_render_attribute( 'slider_container'. $item_count, 'class', 'wpr-slider-animation wpr-animation-wrap' );
-						$this->add_render_attribute( 'slider_outer'. $item_count, 'class', 'wpr-anim-transparency wpr-anim-size-'. $settings['slider_content_anim_size'] .' wpr-overlay-'. $settings['slider_content_animation'] );
+						$this->add_render_attribute( 'slider_outer'. $item_count, 'class', 'wpr-anim-transparency wpr-anim-size-'. $slider_content_anim_size .' wpr-overlay-'. $slider_content_animation );
 					}
 				}
 
@@ -3050,7 +3089,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 					// Slider Link Type
 					if ( ! empty( $item_url ) && $item_type === 'custom' ) {
 
-						$this->add_render_attribute( 'slider_item_url'. $item_count, 'href', $item_url );
+						$this->add_render_attribute( 'slider_item_url'. $item_count, 'href', esc_url($item_url) );
 
 						if ( $item['slider_item_bg_image_url']['is_external'] ) {
 							$this->add_render_attribute( 'slider_item_url'. $item_count, 'target', '_blank' );
@@ -3083,10 +3122,10 @@ class Wpr_Advanced_Slider extends Widget_Base {
 								//  Slider Title
 								if ( $settings['slider_title'] === 'yes' && ! empty( $item['slider_item_title'] ) ) {
 								$slider_html .= '<div class="wpr-slider-title">';
-									if ( '' !== $item['slider_title_tag'] ) {
-										$slider_html .= '<' . $item['slider_title_tag'] . '>'. wp_kses_post($item['slider_item_title']) .'</'. $item['slider_title_tag'] .'>';
+									if ( '' !== $item_slider_title_tag ) {
+										$slider_html .= '<' . $item_slider_title_tag . '>'. wp_kses_post($item['slider_item_title']) .'</'. $item_slider_title_tag .'>';
 									} else {
-										$slider_html .= '<' . $settings['slider_title_tag'] . '>'. wp_kses_post($item['slider_item_title']) .'</'. $settings['slider_title_tag'] .'>';
+										$slider_html .= '<' . $settings_slider_title_tag . '>'. wp_kses_post($item['slider_item_title']) .'</'. $settings_slider_title_tag .'>';
 									}
 								$slider_html .= '</div>';
 								}	
@@ -3094,10 +3133,10 @@ class Wpr_Advanced_Slider extends Widget_Base {
 								// Slider Sub Title
 								if ( $settings['slider_sub_title'] === 'yes' && ! empty( $item['slider_item_sub_title'] ) ) {
 								$slider_html .= '<div class="wpr-slider-sub-title">';
-									if ( '' !== $item['slider_sub_title_tag'] ) {
-										$slider_html .= '<' . $item['slider_sub_title_tag'] . '>'. wp_kses_post($item['slider_item_sub_title']) .'</' . $item['slider_sub_title_tag'] . '>';
+									if ( '' !== $item_slider_sub_title_tag ) {
+										$slider_html .= '<' . $item_slider_sub_title_tag . '>'. wp_kses_post($item['slider_item_sub_title']) .'</' . $item_slider_sub_title_tag . '>';
 									} else {
-										$slider_html .= '<' . $settings['slider_sub_title_tag'] . '>'. wp_kses_post($item['slider_item_sub_title']) .'</' . $settings['slider_sub_title_tag'] . '>';
+										$slider_html .= '<' . $settings_slider_sub_title_tag . '>'. wp_kses_post($item['slider_item_sub_title']) .'</' . $settings_slider_sub_title_tag . '>';
 									}
 								$slider_html .= '</div>';
 								}							
@@ -3114,7 +3153,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 									
 									$btn_element_1 = 'a';
 
-									$this->add_render_attribute( 'primary_btn_url'. $item_count, 'href', $btn_url_1 );
+									$this->add_render_attribute( 'primary_btn_url'. $item_count, 'href', esc_url($btn_url_1) );
 
 									if ( $item['slider_item_btn_url_1']['is_external'] ) {
 										$this->add_render_attribute( 'primary_btn_url'. $item_count, 'target', '_blank' );
@@ -3132,7 +3171,7 @@ class Wpr_Advanced_Slider extends Widget_Base {
 									
 									$btn_element_2 = 'a';
 
-									$this->add_render_attribute( 'secondary_btn_url'. $item_count, 'href', $btn_url_2 );
+									$this->add_render_attribute( 'secondary_btn_url'. $item_count, 'href', esc_url($btn_url_2) );
 
 									if ( $item['slider_item_btn_url_2']['is_external'] ) {
 										$this->add_render_attribute( 'secondary_btn_url'. $item_count, 'target', '_blank' );
@@ -3200,12 +3239,13 @@ class Wpr_Advanced_Slider extends Widget_Base {
 
 		$slider_options = [
 			'rtl' => $slider_is_rtl,
+			'infinite' => ( $settings['slider_loop'] === 'yes' ),
 			'speed' => absint( $settings['slider_effect_duration'] * 1000 ),
 			'arrows'=> true,
 			'dots' 	=> true,
 			'autoplay' => ( $settings['slider_autoplay'] === 'yes' ),
 			'autoplaySpeed'=> absint( $settings['slider_autoplay_duration'] * 1000 ),
-			'pauseOnHover' => $settings['slider_pause_on_hover'],
+			'pauseOnHover' => esc_attr($settings['slider_pause_on_hover']),
 			'prevArrow' => '#wpr-slider-prev-'. $this->get_id(),
 			'nextArrow' => '#wpr-slider-next-'. $this->get_id(),
 			'vertical' => 'slide_vertical' === $settings['slider_effect'] ? true : false,
@@ -3218,13 +3258,13 @@ class Wpr_Advanced_Slider extends Widget_Base {
 			'data-slick' => wp_json_encode( $slider_options ),
 			'data-video-btn-size' => wp_json_encode(
 				[
-					'widescreen' => $slider_video_btn_widescreen,
-					'desktop' => $slider_video_btn_desktop,
-					'laptop' => $slider_video_btn_laptop,
-					'tablet_extra' => $slider_video_btn_tablet_extra,
-					'tablet' => $slider_video_btn_tablet,
-					'mobile_extra' => $slider_video_btn_mobile_extra,
-					'mobile' => $slider_video_btn_mobile
+					'widescreen' => esc_attr($slider_video_btn_widescreen),
+					'desktop' => esc_attr($slider_video_btn_desktop),
+					'laptop' => esc_attr($slider_video_btn_laptop),
+					'tablet_extra' => esc_attr($slider_video_btn_tablet_extra),
+					'tablet' => esc_attr($slider_video_btn_tablet),
+					'mobile_extra' => esc_attr($slider_video_btn_mobile_extra),
+					'mobile' => esc_attr($slider_video_btn_mobile),
 				]
 			)
 		] );

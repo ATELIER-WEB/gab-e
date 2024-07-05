@@ -4,6 +4,7 @@ namespace Simply_Static;
 
 use Exception;
 use voku\helper\HtmlDomParser;
+use function WPML\FP\apply;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,9 +32,7 @@ class Url_Extractor {
 		'base'    => array( 'href' ),
 		'img'     => array( 'src', 'usemap', 'longdesc', 'dynsrc', 'lowsrc', 'srcset', 'data-src', 'data-bg' ),
 		'picture' => array( 'src', 'srcset' ),
-		'source'  => array( 'srcset' ),
 		'amp-img' => array( 'src', 'srcset' ),
-		'link'    => array( 'href' ),
 
 		'applet' => array( 'code', 'codebase', 'archive', 'object' ),
 		'area'   => array( 'href' ),
@@ -84,6 +83,7 @@ class Url_Extractor {
 
 		'meta' => array( 'content' ),
 		'link' => array( 'href' ),
+		'atom' => array( 'href' )
 	);
 
 	// /** @const */
@@ -150,6 +150,8 @@ class Url_Extractor {
 	 * @return int|false
 	 */
 	public function save_body( $content ) {
+		$content = apply_filters( 'simply_static_content_before_save', $content, $this );
+
 		return file_put_contents( $this->options->get_archive_dir() . $this->static_page->file_path, $content );
 	}
 
@@ -262,6 +264,8 @@ class Url_Extractor {
 		// replace wp_json_encode'd urls, as used by WP's `concatemoji`.
 		// e.g. {"concatemoji":"http:\/\/www.example.org\/wp-includes\/js\/wp-emoji-release.min.js?ver=4.6.1"}.
 		$response_body = str_replace( addcslashes( Util::origin_url(), '/' ), addcslashes( $destination_url, '/' ), $response_body );
+
+		$response_body = apply_filters( 'simply_static_force_replaced_urls_body', $response_body, $this->static_page );
 
 		$this->save_body( $response_body );
 	}
@@ -392,6 +396,9 @@ class Url_Extractor {
 				$this
 			);
 
+			// Further manipulate Dom?
+			$dom = apply_filters( 'ss_dom_before_save', $dom, $this->static_page->url );
+
 			return $dom->save();
 		}
 	}
@@ -450,6 +457,9 @@ class Url_Extractor {
 		} else {
 			$decoded_text = html_entity_decode( $text );
 		}
+
+		$decoded_text = apply_filters( 'simply_static_decoded_urls_in_script', $decoded_text, $this->static_page, $this );
+
 		$text = preg_replace( '/(https?:)?\/\/' . addcslashes( Util::origin_host(), '/' ) . '/i', $this->options->get_destination_url(), $decoded_text );
 
 		return $text;
@@ -485,6 +495,8 @@ class Url_Extractor {
 		} else {
 			$decoded_text = html_entity_decode( $tag->innerText );
 		}
+
+		$decoded_text = apply_filters( 'simply_static_decoded_text_in_script', $decoded_text, $this->static_page, $convert_to, $tag, $this );
 
 		$tag->innerText = preg_replace( $regex, $convert_to, $decoded_text );
 

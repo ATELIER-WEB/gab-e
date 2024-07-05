@@ -646,10 +646,16 @@ function wpr_addons_settings_page() {
     
                         ?>  
                             <div class="wpr-setting">
-                                <h4>
-                                    <span><?php esc_html_e( $value . ' : Posts Per Page', 'wpr-addons' ); ?></span>
-                                    <br>
-                                </h4>
+                            <h4>
+                                <span>
+                                    <?php 
+                                    // Translators: %s is replaced with the custom post type (CPT) name
+                                    echo esc_html( sprintf( __( '%s : Posts Per Page', 'wpr-addons' ), $value ) ); 
+                                    ?>
+                                </span>
+                                <br>
+                            </h4>
+
     
                                 <input type="text" name="wpr_cpt_ppp_<?php echo $key ?>" id="wpr_cpt_ppp_<?php echo $key ?>" value="<?php echo esc_attr(get_option('wpr_cpt_ppp_'. $key, 10)); ?>">
                             </div>
@@ -728,6 +734,7 @@ function wpr_addons_settings_page() {
                     <span><?php esc_html_e( 'reCAPTCHA Site Key', 'wpr-addons' ); ?></span>
                     <br>
                     <a href="https://www.google.com/recaptcha/intro/v3.html" target="_blank"><?php esc_html_e( 'How to get reCAPTCHA Site Key?', 'wpr-addons' ); ?></a>
+                    <p class="wpr-settings-group-description"><?php esc_html_e( 'Add a recaptcha element in Form Builder fields to make it work.', 'wpr-addons' ); ?></p>
                 </h4>
 
                 <input type="text" name="wpr_recaptcha_v3_site_key" id="wpr_recaptcha_v3_site_key" value="<?php echo esc_attr(get_option('wpr_recaptcha_v3_site_key')); ?>">
@@ -1500,11 +1507,11 @@ function wpr_addons_settings_page() {
                             echo '<h4 class="wpr-sticky-advanced-demos-title">Advanced Sticky Section (Pro)</h4>';
                             echo '<p class="wpr-sticky-advanced-demos">';
                                 echo '<span>View Demos: </span>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/fashion-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 1, </a>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/digital-marketing-agency-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 2, </a>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/personal-blog-v1/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 3, </a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/construction-v3/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 1, </a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/personal-blog-v1/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 2, </a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/digital-marketing-agency-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 3, </a>';
                                 echo '<a href="https://demosites.royal-elementor-addons.com/digital-marketing-agency-v1/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 4, </a>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/construction-v3/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 5</a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/fashion-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 5</a>';
                             echo '</p>';
                             echo '<a class="wpr-sticky-video-tutorial wpr-inline-link" href="https://www.youtube.com/watch?v=ORay3VWrWuc" target="_blank">Watch Video Tutorial</a>';
                             echo '<a class="wpr-inline-link" href="https://royal-elementor-addons.com/?ref=rea-plugin-backend-elements-advanced-stiky-pro#purchasepro" target="_blank">Upgrade to Pro</a>';
@@ -1512,11 +1519,11 @@ function wpr_addons_settings_page() {
                             echo '<h4 class="wpr-sticky-advanced-demos-title">Advanced Sticky Section</h4>';
                             echo '<p class="wpr-sticky-advanced-demos">';
                                 echo '<span>View Demos: </span>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/fashion-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 1, </a>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/digital-marketing-agency-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 2, </a>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/personal-blog-v1/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 3, </a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/construction-v3/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 1, </a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/personal-blog-v1/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 2, </a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/digital-marketing-agency-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 3, </a>';
                                 echo '<a href="https://demosites.royal-elementor-addons.com/digital-marketing-agency-v1/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 4, </a>';
-                                echo '<a href="https://demosites.royal-elementor-addons.com/construction-v3/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 5</a>';
+                                echo '<a href="https://demosites.royal-elementor-addons.com/fashion-v2/?ref=rea-plugin-backend-elements-advanced-stiky-preview" target="_blank">Demo 5</a>';
                             echo '</p>';
                             echo '<a class="wpr-sticky-video-tutorial" href="https://www.youtube.com/watch?v=ORay3VWrWuc" target="_blank">Watch Video Tutorial</a>';
                         }

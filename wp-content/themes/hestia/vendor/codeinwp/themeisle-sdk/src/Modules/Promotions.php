@@ -34,6 +34,14 @@ class Promotions extends Abstract_Module {
 	private $promotions = array();
 
 	/**
+	 * Holds the values of the promotions that are not allowed to be shown.
+	 * Can be filtered by each product.
+	 *
+	 * @var array
+	 */
+	private $dissallowed_promotions = array();
+
+	/**
 	 * Option key for promos.
 	 *
 	 * @var string
@@ -113,6 +121,8 @@ class Promotions extends Abstract_Module {
 
 		$this->promotions = $this->get_promotions();
 
+		$this->dissallowed_promotions = apply_filters( $product->get_key() . '_dissallowed_promotions', array() );
+
 		foreach ( $this->promotions as $slug => $data ) {
 			if ( ! in_array( $slug, $promotions_to_load, true ) ) {
 				unset( $this->promotions[ $slug ] );
@@ -159,7 +169,6 @@ class Promotions extends Abstract_Module {
 	 */
 	public function load_available() {
 		$this->promotions = $this->filter_by_screen_and_merge();
-
 		if ( empty( $this->promotions ) ) {
 			return;
 		}
@@ -174,6 +183,19 @@ class Promotions extends Abstract_Module {
 	 * @return void
 	 */
 	public function register_reference() {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		if ( ! isset( $_GET['plugin'] ) || ! isset( $_GET['_wpnonce'] ) ) {
+			return;
+		}
+
+		$plugin = rawurldecode( $_GET['plugin'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( wp_verify_nonce( $_GET['_wpnonce'], 'activate-plugin_' . $plugin ) === false ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			return;
+		}
+
 		if ( isset( $_GET['reference_key'] ) ) {
 			update_option( 'otter_reference_key', sanitize_key( $_GET['reference_key'] ) );
 		}
@@ -269,6 +291,22 @@ class Promotions extends Abstract_Module {
 	}
 
 	/**
+	 * Third-party compatibility.
+	 *
+	 * @return boolean
+	 */
+	private function has_conflicts() {
+		global $pagenow;
+
+		// Editor notices aren't compatible with Enfold theme.
+		if ( defined( 'AV_FRAMEWORK_VERSION' ) && in_array( $pagenow, array( 'post.php', 'post-new.php' ) ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Get promotions.
 	 *
 	 * @return array
@@ -285,6 +323,8 @@ class Promotions extends Abstract_Module {
 		$has_ppom                = defined( 'PPOM_VERSION' ) || $this->is_plugin_installed( 'woocommerce-product-addon' );
 		$is_min_req_v            = version_compare( get_bloginfo( 'version' ), '5.8', '>=' );
 		$is_min_fse_v            = version_compare( get_bloginfo( 'version' ), '6.2', '>=' );
+		$current_theme           = wp_get_theme();
+		$has_neve_fse            = $current_theme->template === 'neve-fse' || $current_theme->parent() === 'neve-fse';
 		$has_enough_attachments  = $this->has_min_media_attachments();
 		$has_enough_old_posts    = $this->has_old_posts();
 
@@ -351,7 +391,7 @@ class Promotions extends Abstract_Module {
 			],
 			'neve-fse'    => [
 				'neve-fse-themes-popular' => [
-					'env'    => $is_min_fse_v,
+					'env'    => ! $has_neve_fse && $is_min_fse_v,
 					'screen' => 'themes-install-popular',
 				],
 			],
@@ -359,7 +399,7 @@ class Promotions extends Abstract_Module {
 
 		foreach ( $all as $slug => $data ) {
 			foreach ( $data as $key => $conditions ) {
-				if ( ! $conditions['env'] ) {
+				if ( ! $conditions['env'] || $this->has_conflicts() ) {
 					unset( $all[ $slug ][ $key ] );
 
 					continue;
@@ -476,6 +516,14 @@ class Promotions extends Abstract_Module {
 			$return = array_merge( $return, $this->promotions[ $slug ] );
 		}
 
+		$return = array_filter(
+			$return,
+			function ( $value, $key ) {
+				return ! in_array( $key, $this->dissallowed_promotions, true );
+			},
+			ARRAY_FILTER_USE_BOTH 
+		);
+
 		return array_keys( $return );
 	}
 
@@ -530,6 +578,12 @@ class Promotions extends Abstract_Module {
 				$this->load_woo_promos();
 				break;
 			case 'neve-fse-themes-popular':
+				// Remove any other notifications if Neve FSE promotion is showing
+				remove_action( 'admin_notices', array( 'ThemeisleSDK\Modules\Notification', 'show_notification' ) );
+				remove_action( 'wp_ajax_themeisle_sdk_dismiss_notice', array( 'ThemeisleSDK\Modules\Notification', 'dismiss' ) );
+				remove_action( 'admin_head', array( 'ThemeisleSDK\Modules\Notification', 'dismiss_get' ) );
+				remove_action( 'admin_head', array( 'ThemeisleSDK\Modules\Notification', 'setup_notifications' ) );
+				// Add required actions to display this notification
 				add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 				add_action( 'admin_notices', [ $this, 'render_neve_fse_themes_notice' ] );
 				break;
@@ -784,7 +838,7 @@ class Promotions extends Abstract_Module {
 				);
 
 				return $tabs;
-			} 
+			}
 		);
 
 		add_action( 'woocommerce_product_data_panels', array( $this, 'woocommerce_tab_content' ) );
@@ -800,7 +854,7 @@ class Promotions extends Abstract_Module {
 			function( $key ) {
 				return in_array( $key, $this->promotions, true );
 			},
-			ARRAY_FILTER_USE_KEY 
+			ARRAY_FILTER_USE_KEY
 		);
 
 		// Display CSS

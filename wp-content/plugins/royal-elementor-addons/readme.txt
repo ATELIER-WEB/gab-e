@@ -1,9 +1,9 @@
 === Royal Elementor Addons and Templates ===
 Contributors: WP Royal, rubeushagrid13, cyberpinky, elementoraddonswpr, ggedenidze1982, wprduke
 Tags: elementor, elementor templates, elementor addons, widgets for elementor, elementor widgets, elementor mega menu, elementor woocommerce builder, theme builder, header footer builder, elementor post grid, elementor product grid, addons for elementor
-Stable tag: 1.3.85
+Stable tag: 1.3.979
 Requires at least: 5.0
-Tested up to: 6.4.2
+Tested up to: 6.5.5
 Requires PHP: 5.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -14,7 +14,7 @@ Elementor Post Grid, Portfolio, Woocommerce Grid builder Widgets. Slider, Carous
 
 **Royal Elementor addons** is the most versatile, intuitive, and easy to use [Popular Page Builder](https://wordpress.org/plugins/elementor/) extension. Our goal is to provide you with the tools to make things happen, efficiently, and fast compare to other elementor addons. Choosing us is not only a mindset, but it is also a requirement if you intend to gain an edge over your competitors when creating your website. The best part is that you can design anything **without having to touch a single line of code**.
 
-Comes with **90+ Elementor addons, 70+ Elementor Templates KIT (Growing Each Week), Theme Builder, WooCommerce Builder, Elementor Mega Menu Builder, Popup Builder, Premade Widget Blocks & Extensions.** Creative and self-intuitive widgets to take your WordPress website to the next level. **All widgets are Free** and the Pro Version offers even more advanced functionality.
+Comes with **90+ Elementor addons, 100+ Elementor Templates KIT (Growing Each Week), Theme Builder, WooCommerce Builder, Elementor Mega Menu Builder, Popup Builder, Premade Widget Blocks & Extensions.** Creative and self-intuitive widgets to take your WordPress website to the next level. **All widgets are Free** and the Pro Version offers even more advanced functionality.
 
 *Free and Pro functionalities are mixed in the Widget Demos below.*
 
@@ -136,7 +136,8 @@ and other custom branding related settings)
 - [**Electronic Store**](https://demosites.royal-elementor-addons.com/estore-v1/?ref=rea-wpo-pp-details-tab)
 - [**Auto Parts Store**](https://demosites.royal-elementor-addons.com/woo-auto-parts-v1/?ref=rea-wpo-pp-details-tab)
 - [**Fashion 2**](https://demosites.royal-elementor-addons.com/fashion-v2/?ref=rea-wpo-pp-details-tab)
-- [**Woo Shop**](https://demosites.royal-elementor-addons.com/wooshop-v1/?ref=rea-wpo-pp-details-tab)
+- [**Woo Shop 1**](https://demosites.royal-elementor-addons.com/wooshop-v1/?ref=rea-wpo-pp-details-tab)
+- [**Woo Shop 2**](https://demosites.royal-elementor-addons.com/shop-wooshop-v2/?ref=rea-wpo-pp-details-tab)
 - [**Fashion 1**](https://demosites.royal-elementor-addons.com/fashion-v1/?ref=rea-wpo-pp-details-tab)
 - [**Grocery Store**](https://demosites.royal-elementor-addons.com/grocery-store-v1/?ref=rea-wpo-pp-details-tab)
 - [**Furniture Store**](https://demosites.royal-elementor-addons.com/furniture-shop-v1/?ref=rea-wpo-pp-details-tab)
@@ -149,10 +150,12 @@ and other custom branding related settings)
 - [**Personal Blog v1**](https://demosites.royal-elementor-addons.com/personal-blog-v1/?ref=rea-wpo-pp-details-tab)
 - [**Personal Blog v2**](https://demosites.royal-elementor-addons.com/personal-blog-v2/?ref=rea-wpo-pp-details-tab)
 - [**Personal Blog v3**](https://demosites.royal-elementor-addons.com/personal-blog-v3/?ref=rea-wpo-pp-details-tab)
+- [**Personal Blog v4**](https://demosites.royal-elementor-addons.com/personal-blog-v4/?ref=rea-wpo-pp-details-tab)
 - [**Magazine Blog v1**](https://demosites.royal-elementor-addons.com/magazine-blog-v1/?ref=rea-wpo-pp-details-tab)
 - [**Magazine Blog v2**](https://demosites.royal-elementor-addons.com/magazine-blog-v2/?ref=rea-wpo-pp-details-tab)
 - [**Magazine Blog v3**](https://demosites.royal-elementor-addons.com/magazine-blog-v3/?ref=rea-wpo-pp-details-tab)
 - [**Magazine Blog V4**](https://demosites.royal-elementor-addons.com/magazine-blog-v4/?ref=rea-wpo-pp-details-tab)
+- [**Magazine Blog V6**](https://demosites.royal-elementor-addons.com/magazine-blog-v6/?ref=rea-wpo-pp-details-tab)
 - [**Food Blog**](https://demosites.royal-elementor-addons.com/food-blog-v1/?ref=rea-wpo-pp-details-tab)
 - [**Travel Blog**](https://demosites.royal-elementor-addons.com/travel-blog-v1/?ref=rea-wpo-pp-details-tab)
 - [**View All Demos**](https://demosites.royal-elementor-addons.com/elementor-templates/?ref=rea-wpo-pp-details-tab)
@@ -179,6 +182,8 @@ and other custom branding related settings)
 - [**Wedding**](https://demosites.royal-elementor-addons.com/wedding-v1/?ref=rea-wpo-pp-details-tab)
 - [**Restaurant**](https://demosites.royal-elementor-addons.com/restaurant-v1/?ref=rea-wpo-pp-details-tab)
 - [**Portfolio**](https://demosites.royal-elementor-addons.com/portfolio-v1/?ref=rea-wpo-pp-details-tab)
+- [**Developer Portfolio**](https://demosites.royal-elementor-addons.com/developer-portfolio-v1/?ref=rea-wpo-pp-details-tab)
+- [**Designer Bio**](https://demosites.royal-elementor-addons.com/designer-bio-v1/?ref=rea-wpo-pp-details-tab)
 - [**Pizza Restaurant**](https://demosites.royal-elementor-addons.com/pizza-v1/?ref=rea-wpo-pp-details-tab)
 - [**Wine Bar**](https://demosites.royal-elementor-addons.com/winebar-v1/?ref=rea-wpo-pp-details-tab)
 - [**Photographer Portfolio Dark**](https://demosites.royal-elementor-addons.com/photographer-v1/?ref=rea-wpo-pp-details-tab)
@@ -188,6 +193,7 @@ and other custom branding related settings)
 - [**NFT**](https://demosites.royal-elementor-addons.com/nft-portfolio-v1/?ref=rea-wpo-pp-details-tab)
 - [**Car Wash**](https://demosites.royal-elementor-addons.com/carwash-v1/?ref=rea-wpo-pp-details-tab)
 - [**Pet Care**](https://demosites.royal-elementor-addons.com/pet-care-v1/?ref=rea-wpo-pp-details-tab)
+- [**Pet Shop**](https://demosites.royal-elementor-addons.com/pet-shop-v1/?ref=rea-wpo-pp-details-tab)
 - [**Digital Marketing Agency**](https://demosites.royal-elementor-addons.com/digital-marketing-agency-v1/?ref=rea-wpo-pp-details-tab)
 - [**One Page Digital Marketing Agency v1**](https://demosites.royal-elementor-addons.com/one-page-v1/?ref=rea-wpo-pp-details-tab)
 - [**One Page Digital Marketing Agency v2**](https://demosites.royal-elementor-addons.com/one-page-v2/?ref=rea-wpo-pp-details-tab)
@@ -196,6 +202,7 @@ and other custom branding related settings)
 - [**Fytness & Gym**](https://demosites.royal-elementor-addons.com/fitness-gym-v1/?ref=rea-wpo-pp-details-tab)
 - [**Business Consulting**](https://demosites.royal-elementor-addons.com/business-consulting-v1/?ref=rea-wpo-pp-details-tab)
 - [**Car Repair**](https://demosites.royal-elementor-addons.com/car-repair-v1/?ref=rea-wpo-pp-details-tab)
+- [**Amazon Product Landing Page**](https://demosites.royal-elementor-addons.com/amazon-landing-page-v1/?ref=rea-wpo-pp-details-tab)
 - [**Business Landing Page**](https://demosites.royal-elementor-addons.com/landing-page-business-v1/?ref=rea-wpo-pp-details-tab)
 - [**Mobile App Landing Page**](https://demosites.royal-elementor-addons.com/landing-page-mobileapp-v1/?ref=rea-wpo-pp-details-tab)
 - [**Investment Landing Page**](https://demosites.royal-elementor-addons.com/landing-page-investment-platform-v1/?ref=rea-wpo-pp-details-tab)
@@ -441,7 +448,86 @@ Minimum php version 5.6
 memory_limit 256M or more
 post_max_size 64M
 
+= How can I report security bugs? =
+
+You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/royal-elementor-addons)
+
 == Changelog ==
+= Royal Elementor Addons v1.3.979 - 2024-06-27 =
+* FIXED: Minor Bugs.
+
+
+= Royal Elementor Addons v1.3.978 - 2024-06-26 =
+* ADDED: Elementor Graphic Nature Template Kit - [**Graphic Nature**](https://demosites.royal-elementor-addons.com/graphic-nature-v1/?ref=rea-wpo-pp-details-tab).
+* ADDED: Elementor Party Planer Template Kit - [**Party Planner**](https://demosites.royal-elementor-addons.com/party-planner-v1/?ref=rea-wpo-pp-details-tab).
+* ADDED: Elementor Ico Landing Page Template Kit - [**Ico Landing Page**](https://demosites.royal-elementor-addons.com/ico-landing-page-v1/?ref=rea-wpo-pp-details-tab).
+* FIXED: Minor Bugs.
+
+
+= Royal Elementor Addons v1.3.977 - 2024-06-06 =
+* ADDED: Elementor Car Rental Template Kit - [**Car Rental**](https://demosites.royal-elementor-addons.com/car-rent-v1/?ref=rea-wpo-pp-details-tab).
+* ADDED: Elementor Cleaning Company Template Kit - [**Cleaning Company**](https://demosites.royal-elementor-addons.com/cleaning-v1/?ref=rea-wpo-pp-details-tab).
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.976 - 2024-05-30 =
+* ADDED: Elementor Church V1 Template Kit - [**Church**](https://demosites.royal-elementor-addons.com/church-v1/?ref=rea-wpo-pp-details-tab).
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.975 - 2024-05-15 =
+* ADDED: Elementor Online Course V1 Template Kit - [**Online Course**](https://demosites.royal-elementor-addons.com/online-course-v1/?ref=rea-wpo-pp-details-tab).
+* ADDED: Elementor Electrician V1 Template Kit - [**Electrician**](https://demosites.royal-elementor-addons.com/electrician-v1/?ref=rea-wpo-pp-details-tab).
+* ADDED: Elementor Nail Salon V1 Template Kit - [**Nail Salon**](https://demosites.royal-elementor-addons.com/nail-salon-v1/?ref=rea-wpo-pp-details-tab).
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.974 - 2024-05-06 =
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.972 - 2024-04-17 =
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.971 - 2024-04-12 =
+* ADDED: Elementor Travel V3 Template Kit - [**Travel**](https://demosites.royal-elementor-addons.com/travel-v3/?ref=rea-wpo-pp-details-tab).
+* ADDED: Digital Marketing V1 One Page Landing Page Template Kit - [**Digital Marketing**](https://demosites.royal-elementor-addons.com/digital-marketing-v1/?ref=rea-wpo-pp-details-tab).
+* ADDED: Jewelry Store V1 Template Kit - [**Jewelry Store**](https://demosites.royal-elementor-addons.com/jewelry-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.97 - 2024-04-10 =
+* Tested up to Latest WP version
+
+= Royal Elementor Addons v1.3.96 - 2024-03-29 =
+* ADDED: Elementor Solar Energy Kit V2 - [**Solar Energy Kit**](https://demosites.royal-elementor-addons.com/solar-energy-v2/?ref=rea-wpo-pp-details-tab).
+* ADDED: Elementor Children School V1 - [**Children School Kit**](https://demosites.royal-elementor-addons.com/school-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.95 - 2024-03-22 =
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.94 - 2024-03-21 =
+* ADDED: Magazine Blog V6 Kit - [**Magazine Blog V6**](https://demosites.royal-elementor-addons.com/magazine-blog-v6/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.93 - 2024-03-13 =
+* ADDED: Pet Shop Template Kit [**Pet Shop V1**](https://demosites.royal-elementor-addons.com/pet-shop-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.92 - 2024-02-20 =
+* FIXED: Minor Bugs.
+
+= Royal Elementor Addons v1.3.91 - 2024-02-18 =
+* ADDED: Wooshop V2 Template Kit [**Wooshop V2**](https://demosites.royal-elementor-addons.com/shop-wooshop-v2/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.90 - 2024-02-15 =
+* ADDED: AI Matrix - Data, Machines & AI Template Kit [**AI Matrix - Data, Machines & AI**](https://demosites.royal-elementor-addons.com/aimatrix-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.89 - 2024-02-08 =
+* ADDED: Amazon Product Landing Page Template Kit [**Amazon Product Landing Page**](https://demosites.royal-elementor-addons.com/amazon-landing-page-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.88 - 2024-02-06 =
+* FIXED: Minor Bugs.
+* ADDED: Designer Bio Template Kit [**Designer Bio**](https://demosites.royal-elementor-addons.com/designer-bio-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.87 - 2024-01-25 =
+* ADDED: Developer Portfolio Template Kit [**Developer Portfolio**](https://demosites.royal-elementor-addons.com/developer-portfolio-v1/?ref=rea-wpo-pp-details-tab).
+
+= Royal Elementor Addons v1.3.86 - 2024-01-25 =
+* ADDED: Personal Blog V4 Template Kit [**Personal Blog V4**](https://demosites.royal-elementor-addons.com/personal-blog-v4/?ref=rea-wpo-pp-details-tab).
+
 = Royal Elementor Addons v1.3.85 - 2023-12-27 =
 * ADDED: Coming Soon Page Kit [**Coming Soon Kit V1**](https://demosites.royal-elementor-addons.com/coming-soon-pack-v1/?ref=rea-wpo-pp-details-tab).
 * ADDED: Music Band Template Kit [**Music Band V1**](https://demosites.royal-elementor-addons.com/music-band-v1/?ref=rea-wpo-pp-details-tab).

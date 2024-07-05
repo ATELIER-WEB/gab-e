@@ -180,6 +180,16 @@ const selectors = {
 	getLimitExceedModalInfo( { onboardingAI: { limitExceedModal } } ) {
 		return limitExceedModal;
 	},
+	getAuthenticationErrorModalInfo( {
+		onboardingAI: { authenticationErrorModal },
+	} ) {
+		return authenticationErrorModal;
+	},
+	getContinueProgressModalInfo( {
+		onboardingAI: { continueProgressModal },
+	} ) {
+		return continueProgressModal;
+	},
 	getDisableAi( { disableAi } ) {
 		return disableAi;
 	},
@@ -205,6 +215,18 @@ const selectors = {
 
 	getCreditsDetails( { credits } ) {
 		return credits;
+	},
+
+	getSiteFeatures( {
+		onboardingAI: {
+			stepData: { siteFeatures },
+		},
+	} ) {
+		return siteFeatures;
+	},
+
+	getLoadingNextStep( { onboardingAI: { loadingNextStep } } ) {
+		return loadingNextStep;
 	},
 };
 

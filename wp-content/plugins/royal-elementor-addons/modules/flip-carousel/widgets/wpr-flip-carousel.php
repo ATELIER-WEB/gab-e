@@ -308,7 +308,8 @@ class Wpr_Flip_Carousel extends Widget_Base {
 				'type' => Controls_Manager::SWITCHER,
 				'return_value' => 'yes',
 				'separator' => 'before',
-				'default' => ''
+				'default' => '',
+				'render_type' => 'template'
 			]
 		);
 		
@@ -785,6 +786,7 @@ class Wpr_Flip_Carousel extends Widget_Base {
 					'{{WRAPPER}} .flipster__nav__item:hover' => 'background-color: {{VALUE}}',
 					'{{WRAPPER}} .flipster__nav__item--current' => 'background-color: {{VALUE}} !important',
 				],
+				'render_type' => 'template'
 			]
 		);
 		
@@ -1138,8 +1140,13 @@ class Wpr_Flip_Carousel extends Widget_Base {
 	public function flip_carousel_attributes($settings) {
 		
 		// Navigation
-		$icon_prev = '<span class="wpr-flip-carousel-navigation">'. Utilities::get_wpr_icon( $settings['flip_carousel_nav_icon'], 'left' ) .'</span>';
-		$icon_next = '<span class="wpr-flip-carousel-navigation">'. Utilities::get_wpr_icon( $settings['flip_carousel_nav_icon'], 'right' ) .'</span>';
+		if (  isset($settings['flip_carousel_nav_icon']) && !empty($settings['flip_carousel_nav_icon']) ) {
+			$icon_prev = '<span class="wpr-flip-carousel-navigation">'. Utilities::get_wpr_icon( $settings['flip_carousel_nav_icon'], 'left' ) .'</span>';
+			$icon_next = '<span class="wpr-flip-carousel-navigation">'. Utilities::get_wpr_icon( $settings['flip_carousel_nav_icon'], 'right' ) .'</span>';
+		} else {
+			$icon_prev = '';
+			$icon_next = '';
+		}
 
 		if ( ! wpr_fs()->can_use_premium_code() ) {
 			$settings['autoplay'] = false;
@@ -1188,7 +1195,7 @@ class Wpr_Flip_Carousel extends Widget_Base {
 				} if (WPR_ADDONS_ASSETS_URL . 'img/logo-slider-450x450.png' === $element['image']['url']) {
 					$flip_slide_image = '<img src="'. esc_url($element['image']['url']) .'" />';
 				} else {
-					$flip_slide_image = '<img alt="'. $element['image']['alt'] .'" src="'.  Group_Control_Image_Size::get_attachment_image_src( $element['image']['id'], 'flip_carousel_image_size', $settings ) .'" />';
+					$flip_slide_image = '<img alt="'. esc_attr( $element['image']['alt'] ) .'" src="'.  Group_Control_Image_Size::get_attachment_image_src( $element['image']['id'], 'flip_carousel_image_size', $settings ) .'" />';
 				}
 
 				if ( 'yes' === $settings['enable_figcaption'] ) {

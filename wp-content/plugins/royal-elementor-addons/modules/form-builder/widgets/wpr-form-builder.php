@@ -210,6 +210,7 @@ class Wpr_Form_Builder extends Widget_Base {
 			[
 				'label' => esc_html__( 'From Email', 'wpr-addons' ),
 				'type' => Controls_Manager::TEXT,
+				'description' => esc_html__( 'Shortcode like [id="email"] can be inserted according ID of the associated mail field.', 'wpr-addons' ),
 				'default' => 'email@' . $site_domain,
 				'render_type' => 'none',
 				'dynamic' => [
@@ -425,16 +426,6 @@ class Wpr_Form_Builder extends Widget_Base {
 			]
 		);
 
-		// Doesn't work even in other plugins that I've checked
-		// $this->add_control(
-		// 	'address_field',
-		// 	[
-		// 		'label' => esc_html__( 'Address', 'wpr-addons' ),
-		// 		'type' => Controls_Manager::SELECT,
-		// 		'options' => []
-		// 	]
-		// );
-
 		$this->add_control(
 			'phone_field',
 			[
@@ -453,9 +444,56 @@ class Wpr_Form_Builder extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'address_field',
+			[
+				'label' => esc_html__( 'Address', 'wpr-addons' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => []
+			]
+		);
+
+		$this->add_control(
+			'country_field',
+			[
+				'label' => esc_html__( 'Country', 'wpr-addons' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => []
+			]
+		);
+
+		$this->add_control(
+			'city_field',
+			[
+				'label' => esc_html__( 'City', 'wpr-addons' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => []
+			]
+		);
+
+		$this->add_control(
+			'state_field',
+			[
+				'label' => esc_html__( 'State', 'wpr-addons' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => []
+			]
+		);
+
+		$this->add_control(
+			'zip_field',
+			[
+				'label' => esc_html__( 'Zip', 'wpr-addons' ),
+				'type' => Controls_Manager::SELECT,
+				'options' => []
+			]
+		);
+
 		$this->end_controls_section();
 
 	}
+    
+    public $last_prev_btn_text;
 	
 	protected function register_controls() {
 
@@ -1718,6 +1756,7 @@ class Wpr_Form_Builder extends Widget_Base {
 				'default' => '#7a7a7a',
 				'selectors' => [
 					'{{WRAPPER}} .wpr-field-group .wpr-form-field' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .wpr-field-group .wpr-form-field svg' => 'fill: {{VALUE}};',
 					'{{WRAPPER}} .wpr-field-group input[type="radio"] + label' => 'color: {{VALUE}};',
 					'{{WRAPPER}} .wpr-field-group input[type="checkbox"] + label' => 'color: {{VALUE}};'
 				]
@@ -3346,7 +3385,8 @@ class Wpr_Form_Builder extends Widget_Base {
 				'select-wrapper' . $i => [
 					'class' => [
 						'wpr-form-field',
-						'wpr-select-wrap',
+						'wpr-select-wrap', 
+						'wpr-fi-svg-'. (\Elementor\Plugin::$instance->experiments->is_feature_active( 'e_font_icon_svg' ) ? 'yes' : 'no'),
 						'remove-before',
 						esc_attr( $item['css_classes'] ),
 					],
@@ -3381,6 +3421,22 @@ class Wpr_Form_Builder extends Widget_Base {
 		ob_start();
 		?>
 		<div <?php $this->print_render_attribute_string( 'select-wrapper' . $i ); ?>>
+
+			<?php if ( \Elementor\Plugin::$instance->experiments->is_feature_active( 'e_font_icon_svg' ) ) { ?>
+				<!-- <svg class="e-font-icon-svg e-eicon-caret-down" viewBox="0 0 571.4 1000" xmlns="http://www.w3.org/2000/svg">
+					<path d="M571 457q0-14-10-25l-250-250q-11-11-25-11t-25 11l-250 250q-11 11-11 25t11 25 25 11h500q14 0 25-11t10-25z"/>
+				</svg> -->
+				<!-- <svg class="e-font-icon-svg e-eicon-caret-up" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+					<path d="M763 279c8-8 8-12 8-25 0-8-4-16-8-25-9-8-13-8-25-8h-459c-8 0-16 4-25 8 0 9-4 17-4 25 0 9 4 17 8 25l230 229c8 5 16 9 25 9 8 0 16-4 25-9l225-229z"/>
+				</svg> -->
+				<!-- <svg class="e-font-icon-svg e-eicon-caret-up" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+					<path d="M763 279c8-8 8-12 8-25 0-8-4-16-8-25-9-8-13-8-25-8h-459c-8 0-16 4-25 8 0 9-4 17-4 25 0 9 4 17 8 25l230 229c8 5 16 9 25 9 8 0 16-4 25-9l225-229z"/>
+				</svg> -->
+				<svg class="e-font-icon-svg e-eicon-caret-up" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+					<path d="M763 279c8-8 8-12 8-25 0-8-4-16-8-25-9-8-13-8-25-8h-459c-8 0-16 4-25 8 0 9-4 17-4 25 0 9 4 17 8 25l230 229c8 5 16 9 25 9 8 0 16-4 25-9l225-229z"/>
+				</svg>
+			<?php } ?>
+
 			<select <?php $this->print_render_attribute_string( 'select' . $i ); ?>>
 
 				<?php
@@ -3419,9 +3475,9 @@ class Wpr_Form_Builder extends Widget_Base {
 		$options = preg_split( "/\\r\\n|\\r|\\n/", $item['field_options'] );
 		$html = '';
 		if ( $options ) {
-			$html .= '<div class="wpr-field-sub-group ' . esc_attr( $item['css_classes'] ) . ' ' . $item['inline_list'] . '">';
+			$html .= '<div class="wpr-field-sub-group ' . esc_attr( $item['css_classes'] ) . ' ' . esc_attr( $item['inline_list'] ). '">';
 			foreach ( $options as $key => $option ) {
-				$element_id = ($item['field_id'] ? $item['field_id'] : $item['field_type']) . $key;
+				$element_id = ($item['field_id'] ? esc_attr( $item['field_id'] ) : $item['field_type']) . $key;
 				$html_id = $this->get_attribute_id( $item ) . '-' . $key;
 				$option_label = $option;
 				$option_value = $option;
@@ -3448,7 +3504,7 @@ class Wpr_Form_Builder extends Widget_Base {
 					$this->add_required_attribute( $element_id );
 				}
 
-				$html .= '<span class="wpr-form-field-option" data-key="form-field-'. $item['field_id'] .'"><input ' . $this->get_render_attribute_string( $element_id ) . '> <label for="' . $html_id . '">'. $option_label .'</label></span>';
+				$html .= '<span class="wpr-form-field-option" data-key="form-field-'. esc_attr( $item['field_id'] ).'"><input ' . $this->get_render_attribute_string( $element_id ) . '> <label for="' . esc_attr( $html_id ) . '">'. $option_label .'</label></span>';
 			}
 			$html .= '</div>';
 		}
@@ -3464,7 +3520,7 @@ class Wpr_Form_Builder extends Widget_Base {
 						'wpr-form-field-type-' . $item['field_type'],
 						'wpr-field-group',
 						'wpr-column',
-						'wpr-field-group-' . $item['field_id'],
+						'wpr-field-group-' . esc_attr( $item['field_id'] ),
 					],
 				],
 				'input' . $i => [
@@ -3538,25 +3594,6 @@ class Wpr_Form_Builder extends Widget_Base {
 	<?php }
 
 	public function render_submit_button($instance) {
-		// echo '<button type="submit" '.  $this->get_render_attribute_string( 'button' ) .'>';
-		// 	echo '<span '. $this->get_render_attribute_string( 'content-wrapper' ) .'>';
-		// 		if ( ! empty( $instance['button_icon'] ) || ! empty( $instance['selected_button_icon'] ) ) :
-		// 			echo '<span '. $this->get_render_attribute_string( 'icon-align' ) .'>';
-		// 				if ( empty( $instance['button_text'] ) ) :
-		// 					// remove class if possible
-		// 					echo '<span  class="wpr-hidden-element">'. esc_html__( 'Submit', 'wpr-addons' ) .'</span>';
-		// 				endif;
-		// 			echo '</span>';
-		// 		endif;
-		// 		if ( ! empty( $instance['button_text'] ) ) :
-		// 			echo '<span> '. $this->print_unescaped_setting( 'button_text' ) .'</span>';
-		// 		endif;
-		// 	echo '</span>';
-		// 	echo '<div class="wpr-double-bounce wpr-loader-hidden">';
-		// 		echo '<div class="wpr-child wpr-double-bounce1"></div>';
-		// 		echo '<div class="wpr-child wpr-double-bounce2"></div>';
-		// 	echo '</div>';
-		// echo '</button>';
 		?>
 			<button type="submit" <?php echo $this->get_render_attribute_string( 'button' ); ?>>
 				<span <?php echo $this->get_render_attribute_string( 'content-wrapper' ); ?>>
@@ -3641,7 +3678,7 @@ class Wpr_Form_Builder extends Widget_Base {
 						json_encode($submit_actions)
 					],
 					'data-redirect-url' => [
-						in_array('redirect', $submit_actions) ? $instance['redirect_to'] : ''
+						in_array('redirect', $submit_actions) ? esc_url( $instance['redirect_to'] ) : ''
 					],
 					'data-mailchimp-fields' => [
 						json_encode($fieldsArray)
@@ -3702,6 +3739,7 @@ class Wpr_Form_Builder extends Widget_Base {
 				$step_icon = [];
 				$step_label = [];
 				$step_sub_label = [];
+				$whitelist = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'ppt', 'pptx', 'odt', 'avi', 'ogg', 'm4a', 'mov', 'mp3', 'mp4', 'mpg', 'wav', 'wmv', 'txt'];
 
 				foreach ( $instance['form_fields'] as $key => $value ) {
 					if ( 'step' === $value['field_type'] ) {
@@ -3763,6 +3801,7 @@ class Wpr_Form_Builder extends Widget_Base {
 
 				$step_count = 0;
 				$field_count = 0;
+
 				foreach ( $instance['form_fields'] as $item_index => $item ) :
 					if ( 'step' !== $item['field_type'] ) {
 						$field_count++;
@@ -3777,6 +3816,10 @@ class Wpr_Form_Builder extends Widget_Base {
 
 					
 					if ( 'step' === $item['field_type'] )  {
+                        if ( isset($item['previous_button_text']) ) {
+                            $this->last_prev_btn_text = $item['previous_button_text'];
+                        }
+
 						if ( 0 === $step_count ) {
 							echo '<div class="wpr-step-tab wpr-step-tab-hidden">';
 						} else {
@@ -3852,6 +3895,28 @@ class Wpr_Form_Builder extends Widget_Base {
 								}
 
 								if ( !empty( $item['file_types'] )) {
+
+									// Convert string to array
+									$file_types = explode(',', $item['file_types']);
+									
+									// Check for non-whitelisted file types
+									$non_whitelisted = array_diff($file_types, $whitelist);
+									
+									if ( !empty($non_whitelisted) ) {
+										$item['file_types'] = 'jpg,jpeg,png,gif,pdf,doc,docx,ppt,pptx,odt,avi,ogg,m4a,mov,mp3,mp4,mpg,wav,wmv,txt';
+										if ( is_admin() ) {
+											echo '<br>';
+											echo '<ul class="wpr-file-type-error">';
+												echo esc_html__( 'Please remove unsupported file type(s):', 'wpr-addons' );
+												foreach ( $non_whitelisted as $type ) {
+													if ( !empty($type) ) {
+														echo '<li>'. $type .' <li/>';
+													}
+												}
+											echo '</ul>';
+										}
+									}
+
 									$this->add_render_attribute(
 										'input' . $item_index,
 										[
@@ -3863,7 +3928,7 @@ class Wpr_Form_Builder extends Widget_Base {
 								echo '<input size="1 "'. $this->get_render_attribute_string( 'input' . $item_index ) .'>';
 								break;
 							case 'step':
-								echo '<input type="hidden" class="wpr-step-input" id=form-field-'. $item['field_id'] .' value='. $item['field_label'] .'>';
+								echo '<input type="hidden" class="wpr-step-input" id=form-field-'. esc_attr( $item['field_id'] ) .' value='. $item['field_label'] .'>';
 								break;
 							default:
 								$field_type = $item['field_type'];
@@ -3876,7 +3941,7 @@ class Wpr_Form_Builder extends Widget_Base {
 				if ( 'exists' === $step_exists ) {
 						echo '<div '. $this->get_render_attribute_string( 'submit-group' ) .'>';
 							if ( 2 <= $step_count ) {
-								echo '<button type="button" class="wpr-step-prev">Previous</button>';
+								echo '<button type="button" class="wpr-step-prev">'. $this->last_prev_btn_text .'</button>';
 							}
 
 							echo $this->render_submit_button($instance);

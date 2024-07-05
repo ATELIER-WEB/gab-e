@@ -763,7 +763,7 @@ class Wpr_Woo_Grid extends Widget_Base {
 				'dynamic' => [
 					'active' => true,
 				],
-				'default' => 'No Posts Found!',
+				'default' => 'No Products Found!',
 				'condition' => [
 					'query_selection' => [ 'dynamic', 'current' ],
 				]
@@ -1742,11 +1742,9 @@ class Wpr_Woo_Grid extends Widget_Base {
 			'element_lightbox_pfa_meta',
 			[
 				'label' => esc_html__( 'Audio Meta Value', 'wpr-addons' ),
-				// 'type' => Controls_Manager::SELECT2,
 				'type' => 'wpr-ajax-select2',
 				'label_block' => true,
 				'default' => 'default',
-				// 'options' => $post_meta_keys[1],
 				'options' => 'ajaxselect2/get_custom_meta_keys',
 				'query_slug' => 'product_cat',
 				'condition' => [
@@ -1776,11 +1774,9 @@ class Wpr_Woo_Grid extends Widget_Base {
 			'element_lightbox_pfv_meta',
 			[
 				'label' => esc_html__( 'Video Meta Value', 'wpr-addons' ),
-				// 'type' => Controls_Manager::SELECT2,
 				'type' => 'wpr-ajax-select2',
 				'label_block' => true,
 				'default' => 'default',
-				// 'options' => $post_meta_keys[1],
 				'options' => 'ajaxselect2/get_custom_meta_keys',
 				'query_slug' => 'product_cat',
 				'condition' => [
@@ -4758,7 +4754,7 @@ class Wpr_Woo_Grid extends Widget_Base {
 				'default' => '#D2CDCD',
 				'selectors' => [
 					'{{WRAPPER}} .wpr-woo-rating i' => 'color: {{VALUE}};',
-					'{{WRAPPER}} .wpr-woo-rating svg' => 'fill: {{VALUE}};'
+					'{{WRAPPER}} .wpr-woo-rating .wpr-rating-unmarked svg' => 'fill: {{VALUE}};'
 				],
 			]
 		);
@@ -4771,6 +4767,7 @@ class Wpr_Woo_Grid extends Widget_Base {
 				'default' => '#ffd726',
 				'selectors' => [
 					'{{WRAPPER}} .wpr-woo-rating span' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .wpr-woo-rating .wpr-rating-marked svg' => 'fill: {{VALUE}};',
 				],
 			]
 		);
@@ -4817,7 +4814,8 @@ class Wpr_Woo_Grid extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .wpr-woo-rating i' => 'margin-right: {{SIZE}}{{UNIT}};',
-					'{{WRAPPER}} .wpr-woo-rating span' => 'margin-left: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .wpr-woo-rating span.wpr-rating-icon' => 'margin-right: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .wpr-woo-rating span:not(.wpr-rating-icon, .wpr-rating-icon span)' => 'margin-left: {{SIZE}}{{UNIT}};',
 				],
 				'separator' => 'after'
 			]
@@ -8638,11 +8636,11 @@ class Wpr_Woo_Grid extends Widget_Base {
 				$args['orderby']  = 'meta_value_num';
 			} elseif ( 'price' === $_GET['orderby'] ) {
 				$args['meta_key'] = '_price';
-				$args['order'] = $settings['order_direction'];
+				$args['order'] = 'ASC';
 				$args['orderby']  = 'meta_value_num';
 			} elseif ( 'price-desc' === $_GET['orderby'] ) {
 				$args['meta_key'] = '_price';
-				$args['order'] = $settings['order_direction'];
+				$args['order'] = 'DESC';
 				$args['orderby']  = 'meta_value_num';
 			} elseif ( 'random' === $_GET['orderby'] ) {
 				$args['orderby']  = 'rand';
@@ -8650,10 +8648,10 @@ class Wpr_Woo_Grid extends Widget_Base {
 				$args['orderby']  = 'date';
 			} else if ( 'title' === $_GET['orderby'] ){
 				$args['orderby']  = 'title';
-				$args['order'] = $settings['order_direction'];
+				$args['order'] = 'ASC';
 			} else if ( 'title-desc' === $_GET['orderby'] ) {
 				$args['orderby']  = 'title';
-				$args['order'] = $settings['order_direction'];
+				$args['order'] = 'DESC';
 			} else {
 				$args['order'] = $settings['order_direction'];
 				$args['orderby']  = 'menu_order';
@@ -8885,7 +8883,7 @@ class Wpr_Woo_Grid extends Widget_Base {
 		}
 
 		if ( has_post_thumbnail() ) {
-			echo '<div class="wpr-grid-image-wrap" data-src="'. esc_url( $src ) .'"  data-img-on-hover="'. $settings['secondary_img_on_hover'] .'" data-src-secondary="'. esc_url( $src2 ) .'">';
+			echo '<div class="wpr-grid-image-wrap" data-src="'. esc_url( $src ) .'"  data-img-on-hover="'. esc_attr( $settings['secondary_img_on_hover'] ) .'" data-src-secondary="'. esc_url( $src2 ) .'">';
 				echo '<img src="'. esc_url( $src ) .'" alt="'. esc_attr( $alt ) .'" class="wpr-anim-timing-'. esc_attr($settings[ 'image_effects_animation_timing']) .'">';
 				if ( 'yes' == $settings['secondary_img_on_hover'] ) {
 					echo '<img src="'. esc_url( $src2 ) . '" alt="'. esc_attr( $alt ) .'" class="wpr-hidden-img wpr-anim-timing-'. esc_attr($settings[ 'image_effects_animation_timing']) .'">';
@@ -8917,7 +8915,10 @@ class Wpr_Woo_Grid extends Widget_Base {
 		$class .= ' wpr-pointer-'. $title_pointer;
 		$class .= ' wpr-pointer-line-fx wpr-pointer-fx-'. $title_pointer_animation;
 
-		echo '<'. esc_attr($settings['element_title_tag']) .' class="'. esc_attr($class) .'">';
+		$tags_whitelist = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'];
+		$element_title_tag = Utilities::validate_html_tags_wl( $settings['element_title_tag'], 'h2', $tags_whitelist );
+
+		echo '<'. esc_attr($element_title_tag) .' class="'. esc_attr($class) .'">';
 			echo '<div class="inner-block">';
 				echo '<a target="'. $open_links_in_new_tab .'"  '. $pointer_item_class .' href="'. esc_url( get_the_permalink() ) .'">';
 				if ( 'word_count' === $settings['element_trim_text_by'] ) {
@@ -8927,7 +8928,7 @@ class Wpr_Woo_Grid extends Widget_Base {
 				}
 				echo '</a>';
 			echo '</div>';
-		echo '</'. esc_attr($settings['element_title_tag']) .'>';
+		echo '</'. esc_attr($element_title_tag) .'>';
 	}
 
 	// Render Post Excerpt
@@ -9223,7 +9224,7 @@ class Wpr_Woo_Grid extends Widget_Base {
 			'aria-label="'. esc_attr($product->add_to_cart_description()) .'"',
 			'data-product_id="'. esc_attr($product->get_id()) .'"',
 			'data-product_sku="'. esc_attr($product->get_sku()) .'"',
-			'data-atc-popup="'. $settings['element_show_added_tc_popup']  .'"',
+			'data-atc-popup="'. esc_attr( $settings['element_show_added_tc_popup'] ) .'"',
 			'data-atc-animation="'. $popup_notification_animation  .'"',
 			'data-atc-fade-out-in="'. $popup_notification_fade_out_in  .'"',
 			'data-atc-animation-time="'. $popup_notification_animation_duration  .'"'
@@ -9259,9 +9260,23 @@ class Wpr_Woo_Grid extends Widget_Base {
 		} else if ( 'pw-gift-card' === $product->get_type() ) {
 			$button_HTML .= esc_html__('Select Amount', 'wpr-addons');
 			array_push( $attributes, 'href="'. esc_url( get_permalink() ) .'"' );
+		} else if ( 'ywf_deposit' === $product->get_type() ) {
+			$button_HTML .= esc_html__('Select Amount', 'wpr-addons');
+			array_push( $attributes, 'href="'. esc_url( get_permalink() ) .'"' );
+		} else if ( 'stm_lms_product' === $product->get_type() ) {
+			$button_HTML .= esc_html__('View Product', 'wpr-addons');
+			array_push( $attributes, 'href="'. esc_url( get_permalink() ) .'"' );
+		} else if ( 'redq_rental' === $product->get_type() ) {
+			$button_HTML .= esc_html__('View Product', 'wpr-addons');
+			array_push( $attributes, 'href="'. esc_url( get_permalink() ) .'"' );
 		} else {
-			array_push( $attributes, 'href="'. esc_url( $product->get_product_url() ) .'"' );
-			$button_HTML .= get_post_meta( get_the_ID(), '_button_text', true ) ? get_post_meta( get_the_ID(), '_button_text', true ) : 'Buy Product';
+			if ( !$product->get_product_url() ) {
+				$button_HTML .= esc_html__('View Product', 'wpr-addons');
+				array_push( $attributes, 'href="'. esc_url( get_permalink() ) .'"' );
+			} else {
+				array_push( $attributes, 'href="'. esc_url( $product->get_product_url() ) .'"' );
+				$button_HTML .= get_post_meta( get_the_ID(), '_button_text', true ) ? get_post_meta( get_the_ID(), '_button_text', true ) : esc_html__('Buy Product');
+			}
 		}
 
 		// Icon: After
@@ -9467,6 +9482,29 @@ class Wpr_Woo_Grid extends Widget_Base {
 		echo '</div>';
 	}
 
+    public function render_rating_icon( $class, $unmarked_style ) {
+        $settings = $this->get_settings();
+        ?>
+
+        <span class="wpr-rating-icon <?php echo esc_attr($class); ?>">
+            <span class="wpr-rating-marked">
+                <?php \Elementor\Icons_Manager::render_icon( [ 'value' => 'fas fa-star', 'library' => 'fa-solid' ], [ 'aria-hidden' => 'true' ] ); ?>
+            </span>
+
+            <span class="wpr-rating-unmarked">
+                <?php 
+                    if ( 'outline' === $unmarked_style ) {
+                        \Elementor\Icons_Manager::render_icon( [ 'value' => 'far fa-star', 'library' => 'fa-regular' ], [ 'aria-hidden' => 'true' ] );
+                    } else {
+                        \Elementor\Icons_Manager::render_icon( [ 'value' => 'fas fa-star', 'library' => 'fa-solid' ], [ 'aria-hidden' => 'true' ] );
+                    }
+                 ?>
+            </span>
+        </span>
+
+        <?php
+    }
+
 	// Render Rating
 	public function render_product_rating( $settings, $class ) {
 
@@ -9508,15 +9546,31 @@ class Wpr_Woo_Grid extends Widget_Base {
 					echo '<i class="wpr-rating-icon-10">'. esc_html($rating_icon) .'</i>';
 					echo '<span>'. esc_html($rating_amount) .'</span>';
 				} else {
-					for ( $i = 1; $i <= 5; $i++ ) {
-						if ( $i <= $rating_amount ) {
-							echo '<i class="wpr-rating-icon-full">'. esc_html($rating_icon) .'</i>';
-						} elseif ( $i === $round_rating + 1 && $rating_amount !== $round_rating ) {
-							echo '<i class="wpr-rating-icon-'. esc_attr((( $rating_amount - $round_rating ) * 10)) .'">'. esc_html($rating_icon) .'</i>';
-						} else {
-							echo '<i class="wpr-rating-icon-empty">'. esc_html($rating_icon) .'</i>';
-						}
-			     	}
+
+                    if ( \Elementor\Plugin::$instance->experiments->is_feature_active( 'e_font_icon_svg' ) ) {
+                        for ( $b = 1; $b <= 5;  $b++ ) {
+                        
+                            if ( $b <= $rating_amount ) :
+                                $this->render_rating_icon( 'wpr-rating-icon-full', $settings['element_rating_unmarked_style'] );
+                            elseif ( $b === $round_rating + 1 && $rating_amount !== $round_rating ) :
+                                $this->render_rating_icon( 'wpr-rating-icon-'. (( $rating_amount - $round_rating ) * 10), $settings['element_rating_unmarked_style'] );
+                            else :
+                                $this->render_rating_icon( 'wpr-rating-icon-0', $settings['element_rating_unmarked_style'] );
+                            endif;
+                            
+                        }
+                    } else {
+                        for ( $i = 1; $i <= 5; $i++ ) {
+
+                            if ( $i <= $rating_amount ) {
+                                echo '<i class="wpr-rating-icon-full">'. esc_html($rating_icon) .'</i>';
+                            } elseif ( $i === $round_rating + 1 && $rating_amount !== $round_rating ) {
+                                echo '<i class="wpr-rating-icon-'. esc_attr((( $rating_amount - $round_rating ) * 10)) .'">'. esc_html($rating_icon) .'</i>';
+                            } else {
+                                echo '<i class="wpr-rating-icon-empty">'. esc_html($rating_icon) .'</i>';
+                            }
+                         }
+                    }
 				}
 
 				echo '</div>';
@@ -9539,7 +9593,12 @@ class Wpr_Woo_Grid extends Widget_Base {
 			echo '<div class="inner-block">';
 
 			echo '<span>'. wp_kses_post($product->get_price_html()) .'</span>';
-			$sale_price_dates_to    = ( $date = get_post_meta( $product->get_id(), '_sale_price_dates_to', true ) ) ? date_i18n( 'Y-m-d', $date ) : '';
+
+			$sale_price_dates_to = ( $date = get_post_meta( $product->get_id(), '_sale_price_dates_to', true ) ) ? date_i18n( 'Y-m-d', $date ) : '';
+		
+			// Apply filter to $sale_price_dates_to
+			$sale_price_dates_to = apply_filters( 'wpr_custom_sale_price_dates_to_filter', $sale_price_dates_to, $product );
+            
 			echo $sale_price_dates_to;
 
 			echo '</div>';
@@ -10277,6 +10336,8 @@ class Wpr_Woo_Grid extends Widget_Base {
 		] );
 	}
 
+	public $my_upsells;
+
 	protected function render() {
 		// Get Settings
 		$settings = $this->get_settings();
@@ -10293,9 +10354,12 @@ class Wpr_Woo_Grid extends Widget_Base {
 
 		$post_index = 0;
 
+		$tags_whitelist = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'];
+		$grid_linked_products_heading_tag = Utilities::validate_html_tags_wl( $settings['grid_linked_products_heading_tag'], 'h2', $tags_whitelist );
+
 		if ( ('upsell' === $settings['query_selection'] && '' !== $settings['grid_linked_products_heading']) || ('cross-sell' === $settings['query_selection'] && '' !== $settings['grid_linked_products_heading']) ) {
 			echo '<div class="wpr-grid-linked-products-heading">';
-				echo '<'. $settings['grid_linked_products_heading_tag'] .'>'. esc_html( $settings['grid_linked_products_heading'] ) .'</'. $settings['grid_linked_products_heading_tag'] .'>';
+				echo '<'. $grid_linked_products_heading_tag .'>'. esc_html( $settings['grid_linked_products_heading'] ) .'</'. $grid_linked_products_heading_tag .'>';
 			echo '</div>';
 		}
 		

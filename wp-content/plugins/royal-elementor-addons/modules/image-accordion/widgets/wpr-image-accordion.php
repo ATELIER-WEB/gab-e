@@ -54,6 +54,8 @@ class Wpr_Image_Accordion extends Widget_Base {
     		return 'https://wordpress.org/support/plugin/royal-elementor-addons/';
     }
 
+	public $item_bg_image_url;
+
 	public function add_section_lightbox_popup() {}
 
 	public function add_section_lightbox_styles() {}
@@ -336,7 +338,8 @@ class Wpr_Image_Accordion extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .wpr-image-accordion-wrap .wpr-image-accordion-item.wpr-image-accordion-item-grow' => 'flex: {{SIZE}};',
-				]
+				],
+				'render_type' => 'template'
 			]
 		);
 
@@ -2197,13 +2200,18 @@ class Wpr_Image_Accordion extends Widget_Base {
 	public function render_repeater_title( $settings, $class, $item ) {
 
 		if (!empty($item['accordion_item_title'])) :
-		echo '<'. $settings['element_title_tag'] .' class="'. esc_attr($class) .'">';
+
+		$tags_whitelist = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'];
+		$element_title_tag = Utilities::validate_html_tags_wl( $settings['element_title_tag'], 'h2', $tags_whitelist );
+
+		echo '<'. $element_title_tag .' class="'. esc_attr($class) .'">';
 			echo '<div class="inner-block">';
 				echo '<a class="wpr-pointer-item">';
 					echo $item['accordion_item_title'];
 				echo '</a>';
 			echo '</div>';
-		echo '</'. $settings['element_title_tag'] .'>';
+		echo '</'. $element_title_tag .'>';
+
 		endif;
 	}
 
@@ -2393,12 +2401,15 @@ class Wpr_Image_Accordion extends Widget_Base {
 		?>
 
 		<div class="wpr-image-accordion-wrap <?php echo $no_column ?>">
+
 			<?php if ( ! wpr_fs()->can_use_premium_code() ) : ?>
 				<div class="wpr-image-accordion">
 			<?php else : ?>
 				<div class="wpr-image-accordion" <?php echo $this->get_render_attribute_string('lightbox-settings') ?>>
 			<?php endif ; ?>
+
 			<?php foreach ( $settings['accordion_items'] as $key => $item ) :
+
 			if ( ! wpr_fs()->can_use_premium_code() && $key === 3 ) {
 				break;
 			}
@@ -2428,11 +2439,11 @@ class Wpr_Image_Accordion extends Widget_Base {
 			$render_attribute = $this->get_render_attribute_string( 'accordion-settings'.$key );
 
 			if ( ! empty( $item['accordion_btn_url']['url'] ) ) {
-				$this->add_link_attributes( 'accordion_btn_url'.$item['_id'], $item['accordion_btn_url'] );
+				$this->add_link_attributes( 'accordion_btn_url'. esc_attr($item['_id']), $item['accordion_btn_url'] );
 			}
 			?>
 
-				<div data-src=<?php echo $this->item_bg_image_url ?>   class="wpr-image-accordion-item elementor-repeater-item-<?php echo $item['_id'] . $this->get_image_effect_class( $settings )?>">
+				<div data-src=<?php echo esc_url( $this->item_bg_image_url ) ?>   class="wpr-image-accordion-item elementor-repeater-item-<?php echo esc_attr($item['_id']) . $this->get_image_effect_class( $settings )?>">
 
 				<div class="wpr-accordion-background" style="background-image: url(<?php echo $this->item_bg_image_url ?>);"></div>
 							
@@ -2443,7 +2454,9 @@ class Wpr_Image_Accordion extends Widget_Base {
 								echo '</div>';
 							?>
 				</div>
+
 			<?php endforeach; ?>
+            
 			</div>
 		</div>
 

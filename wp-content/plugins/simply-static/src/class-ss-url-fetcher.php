@@ -254,9 +254,8 @@ class Url_Fetcher {
 			'timeout'     => self::TIMEOUT,
 			'sslverify'   => false,
 			'redirection' => 0, // disable redirection.
-			'blocking'    => true // do not execute code until this call is complete.
+			'blocking'    => true,
 		);
-
 
 		if ( $filename ) {
 			$args['stream']   = true; // stream body content to a file.

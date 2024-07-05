@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tooltip } from '@brainstormforce/starter-templates-components';
 import { __ } from '@wordpress/i18n';
-import { useSelect } from '@wordpress/data';
+import { useSelect, useDispatch } from '@wordpress/data';
 import { Button, PreviousStepLink } from '../../../../../components';
 import ICONS from '../../../../../../icons';
 import { useStateValue } from '../../../../../store/store';
@@ -13,11 +13,8 @@ import {
 } from '../../../../import-site/import-utils';
 import LoadingSpinner from '../../../components/loading-spinner';
 import { STORE_KEY } from '../../../store';
-// import Button from '../../components/button/button';
-// import { useStateValue } from '../../store/store';
-// import './style.scss';
-// import PreviousStepLink from '../../components/util/previous-step-link/index';
-// import ICONS from '../../../icons';
+import { removeLocalStorageItem } from '../../../helpers';
+import { initialState } from '../../../store/reducer';
 
 const List = ( { className, options, onSelect, selected, type } ) => {
 	const handleKeyPress = ( e, id ) => {
@@ -72,6 +69,7 @@ const List = ( { className, options, onSelect, selected, type } ) => {
 								onSelect( event, id );
 							} }
 							tabIndex="0"
+							role="presentation"
 							onKeyDown={ ( event ) => {
 								handleKeyPress( event, id );
 							} }
@@ -160,6 +158,7 @@ export const getFontName = ( fontName, inheritFont ) => {
 };
 
 const FontSelector = ( { options, onSelect, selected } ) => {
+	const { setWebsiteOnboardingAIDetails } = useDispatch( STORE_KEY );
 	const [
 		{
 			currentCustomizeIndex,
@@ -200,6 +199,9 @@ const FontSelector = ( { options, onSelect, selected } ) => {
 		await setSiteTitle( businessName );
 		await saveTypography( typography );
 
+		removeLocalStorageItem( 'ai-onboarding-details' );
+		setWebsiteOnboardingAIDetails( initialState.onboardingAI );
+
 		localStorage.removeItem( 'starter-templates-iframe-preview-data' );
 
 		window.location.href = astraSitesVars.siteURL;
@@ -207,28 +209,6 @@ const FontSelector = ( { options, onSelect, selected } ) => {
 
 	const nextStep = () => {
 		customizeWebsite();
-		// if ( ! importError ) {
-		// 	premiumTemplate = 'free' !== templateResponse[ 'astra-site-type' ];
-		// 	if ( premiumTemplate && ! licenseStatus ) {
-		// 		if ( astraSitesVars.isPro ) {
-		// 			dispatch( {
-		// 				type: 'set',
-		// 				validateLicenseStatus: true,
-		// 				currentCustomizeIndex: currentCustomizeIndex + 1,
-		// 			} );
-		// 		} else {
-		// 			dispatch( {
-		// 				type: 'set',
-		// 				currentCustomizeIndex: currentCustomizeIndex + 1,
-		// 			} );
-		// 		}
-		// 	} else {
-		// 		dispatch( {
-		// 			type: 'set',
-		// 			currentIndex: currentIndex + 1,
-		// 		} );
-		// 	}
-		// }
 	};
 
 	const lastStep = () => {

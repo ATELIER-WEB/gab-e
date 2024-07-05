@@ -1,18 +1,11 @@
-import React, { useEffect, useState } from 'react';
-// import Lottie from 'react-lottie-player';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CircularProgressBar } from '@tomickigrzegorz/react-circular-progress-bar';
 import { __, sprintf } from '@wordpress/i18n';
-// import PreviousStepLink from '../../components/util/previous-step-link/index';
-// import DefaultStep from '../../components/default-step/index';
 import { withDispatch, useSelect } from '@wordpress/data';
 import { compose } from '@wordpress/compose';
 import apiFetch from '@wordpress/api-fetch';
 import ImportLoaderAi from '../../components/import-steps/import-loader-ai';
-// import ErrorScreen from '../../components/error/index';
 import { useStateValue } from '../../store/store';
-// import lottieJson from '../../../images/website-building.json';
-// import ICONS from '../../../icons';
 import sseImport from '../import-site/sse-import';
 import {
 	installAstra,
@@ -20,17 +13,40 @@ import {
 	checkRequiredPlugins,
 	checkFileSystemPermissions,
 	generateAnalyticsLead,
-	exportAiSite,
 	getAiDemo,
+	setSiteLogo,
+	setColorPalettes,
+	setSiteTitle,
+	saveTypography,
+	setSiteLanguage,
 } from '../import-site/import-utils';
 const { reportError } = starterTemplates;
 let sendReportFlag = reportError;
 const successMessageDelay = 8000; // 8 seconds delay for fully assets load.
 import { STORE_KEY } from '../../steps/onboarding-ai/store';
-
+import ErrorModel from './error-model';
 import '../import-site/style.scss';
 
 const { imageDir } = starterTemplates;
+
+const RANDOM_FINAL_FINISHING_MESSAGES = [
+	__( 'Double-checking for grammar and spelling errors…', 'astra-sites' ),
+	__( 'Finalizing setup and configurations…', 'astra-sites' ),
+	__( `Crossing the t's and dotting the i's…`, 'astra-sites' ),
+	__( 'Reviewing for any last-minute tweaks…', 'astra-sites' ),
+	__( 'Almost there! Just a few more finishing touches…', 'astra-sites' ),
+	__( 'Your website is almost ready.', 'astra-sites' ),
+	__( "It's taking longer than usual. Please bear with us!", 'astra-sites' ),
+];
+
+function* getMessage() {
+	let msgIndx = 0;
+	while ( true ) {
+		yield RANDOM_FINAL_FINISHING_MESSAGES[
+			msgIndx++ % RANDOM_FINAL_FINISHING_MESSAGES.length
+		];
+	}
+}
 
 const ImportAiSite = ( { onClickNext } ) => {
 	const storedState = useStateValue();
@@ -39,12 +55,22 @@ const ImportAiSite = ( { onClickNext } ) => {
 	const [ showProgressBar, setShowProgressBar ] = useState( true );
 	const [ isReadyForImport, setIsReadyForImport ] = useState( false );
 
-	const { websiteInfo } = useSelect( ( select ) => {
-		const { getWebsiteInfo } = select( STORE_KEY );
+	const {
+		websiteInfo,
+		aiStepData: {
+			businessName,
+			selectedTemplate,
+			selectedImages,
+			siteLanguage,
+			siteLanguageList,
+		},
+	} = useSelect( ( select ) => {
+		const { getWebsiteInfo, getAIStepData } = select( STORE_KEY );
 		return {
 			websiteInfo: getWebsiteInfo(),
+			aiStepData: getAIStepData(),
 		};
-	} );
+	}, [] );
 
 	const [
 		{
@@ -68,11 +94,13 @@ const ImportAiSite = ( { onClickNext } ) => {
 			templateId,
 			builder,
 			pluginInstallationAttempts,
+			importErrorMessages,
 		},
 		dispatch,
 	] = storedState;
 
-	let percentage = importPercent;
+	const percentage = useRef( importPercent );
+	const randomMessage = useMemo( getMessage, [] );
 
 	/**
 	 *
@@ -81,6 +109,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 * @param {string} text      Text received from the AJAX call.
 	 * @param {string} code      Error code received from the AJAX call.
 	 * @param {string} solution  Solution provided for the current error.
+	 * @param {string} stack
 	 */
 	const report = (
 		primary = '',
@@ -97,7 +126,8 @@ const ImportAiSite = ( { onClickNext } ) => {
 				primaryText: primary,
 				secondaryText: secondary,
 				errorCode: code,
-				errorText: text,
+				errorText:
+					typeof text === 'string' ? text : JSON.stringify( text ),
 				solutionText: solution,
 				tryAgain: true,
 			},
@@ -132,7 +162,8 @@ const ImportAiSite = ( { onClickNext } ) => {
 			return;
 		}
 		const reportErr = new FormData();
-		reportErr.append( 'action', 'report_error' );
+		reportErr.append( 'action', 'astra-sites-report_error' );
+		reportErr.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 		reportErr.append(
 			'error',
 			JSON.stringify( {
@@ -154,6 +185,27 @@ const ImportAiSite = ( { onClickNext } ) => {
 		} );
 	};
 
+	const customizeWebsite = async () => {
+		const [ { aiSiteLogo, aiActiveTypography, aiActivePallette } ] =
+			storedState;
+		const languageItem = siteLanguageList.find(
+			( item ) => item.code === siteLanguage
+		);
+		await setSiteLogo( aiSiteLogo );
+		await setColorPalettes( JSON.stringify( aiActivePallette ) );
+		await setSiteTitle( businessName );
+		await saveTypography( aiActiveTypography );
+		await setSiteLanguage( languageItem?.[ 'wordpress-code' ] ?? 'en_US' );
+	};
+
+	const { stepsData } = useSelect( ( select ) => {
+		const { getAIStepData } = select( STORE_KEY );
+
+		return {
+			stepsData: getAIStepData(),
+		};
+	}, [] );
+
 	/**
 	 * Start Import Part 1.
 	 */
@@ -164,18 +216,15 @@ const ImportAiSite = ( { onClickNext } ) => {
 		let customizerStatus = false;
 		let spectraStatus = false;
 		let sureCartStatus = false;
+		let imageDownloadStatus = false;
 
 		resetStatus = await resetOldSite();
 
-		// if ( resetStatus ) {
-		// 	cfStatus = await importCartflowsFlows();
-		// }
-
-		// if ( cfStatus ) {
-		// 	formsStatus = await importForms();
-		// }
-
 		if ( resetStatus ) {
+			imageDownloadStatus = await downloadImages();
+		}
+
+		if ( imageDownloadStatus ) {
 			customizerStatus = await importCustomizerJson();
 		}
 
@@ -226,15 +275,21 @@ const ImportAiSite = ( { onClickNext } ) => {
 	const installRequiredPlugins = () => {
 		// Install Bulk.
 		if ( notInstalledList.length <= 0 ) {
+			dispatch( {
+				type: 'set',
+				requiredPluginsDone: true,
+			} );
 			return;
 		}
 
-		percentage += 2;
+		percentage.current += 2;
 		dispatch( {
 			type: 'set',
 			importStatus: __( 'Installing Required Plugins.', 'astra-sites' ),
-			importPercent: percentage,
+			importPercent: percentage.current,
 		} );
+
+		const copiedList = [ ...notInstalledList ];
 
 		notInstalledList.forEach( ( plugin ) => {
 			wp.updates.queue.push( {
@@ -258,14 +313,14 @@ const ImportAiSite = ( { onClickNext } ) => {
 							),
 						} );
 
-						const inactiveList = notActivatedList;
+						const inactiveList = [ ...notActivatedList ];
 						inactiveList.push( plugin );
 
 						dispatch( {
 							type: 'set',
 							notActivatedList: inactiveList,
 						} );
-						const notInstalledPluginList = notInstalledList;
+						const notInstalledPluginList = copiedList;
 						notInstalledPluginList.forEach(
 							( singlePlugin, index ) => {
 								if ( singlePlugin.slug === plugin.slug ) {
@@ -317,9 +372,11 @@ const ImportAiSite = ( { onClickNext } ) => {
 
 	/**
 	 * Activate Plugin
+	 *
+	 * @param {Object} plugin
 	 */
 	const activatePlugin = ( plugin ) => {
-		percentage += 2;
+		percentage.current += 2;
 		dispatch( {
 			type: 'set',
 			importStatus: sprintf(
@@ -327,13 +384,13 @@ const ImportAiSite = ( { onClickNext } ) => {
 				__( 'Activating %1$s plugin.', 'astra-sites' ),
 				plugin.name
 			),
-			importPercent: percentage,
+			importPercent: percentage.current,
 		} );
 
 		const activatePluginOptions = new FormData();
 		activatePluginOptions.append(
 			'action',
-			'astra-required-plugin-activate'
+			'astra-sites-required_plugin_activate'
 		);
 		activatePluginOptions.append( 'init', plugin.init );
 		activatePluginOptions.append(
@@ -352,7 +409,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 					const response = JSON.parse( text );
 					cloneResponse = response;
 					if ( response.success ) {
-						const notActivatedPluginList = notActivatedList;
+						const notActivatedPluginList = [ ...notActivatedList ];
 						notActivatedPluginList.forEach(
 							( singlePlugin, index ) => {
 								if ( singlePlugin.slug === plugin.slug ) {
@@ -364,7 +421,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 							type: 'set',
 							notActivatedList: notActivatedPluginList,
 						} );
-						percentage += 2;
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
 							importStatus: sprintf(
@@ -372,7 +429,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 								__( '%1$s activated.', 'astra-sites' ),
 								plugin.name
 							),
-							importPercent: percentage,
+							importPercent: percentage.current,
 						} );
 					}
 				} catch ( error ) {
@@ -450,11 +507,11 @@ const ImportAiSite = ( { onClickNext } ) => {
 		if ( ! reset ) {
 			return true;
 		}
-		percentage += 2;
+		percentage.current += 2;
 		dispatch( {
 			type: 'set',
-			importStatus: __( 'Reseting site.', 'astra-sites' ),
-			importPercent: percentage,
+			importStatus: __( 'Resetting site.', 'astra-sites' ),
+			importPercent: percentage.current,
 		} );
 
 		let backupFileStatus = false;
@@ -516,10 +573,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 			return false;
 		}
 
-		percentage += 10;
+		percentage.current += 10;
 		dispatch( {
 			type: 'set',
-			importPercent: percentage >= 50 ? 50 : percentage,
+			importPercent: percentage.current >= 50 ? 50 : percentage.current,
 			importStatus: __( 'Reset for old website is done.', 'astra-sites' ),
 		} );
 
@@ -528,10 +585,12 @@ const ImportAiSite = ( { onClickNext } ) => {
 
 	/**
 	 * Reset a chunk of posts.
+	 *
+	 * @param {Object} chunk
 	 */
 	const performPostsReset = async ( chunk ) => {
 		const data = new FormData();
-		data.append( 'action', 'astra-sites-get-deleted-post-ids' );
+		data.append( 'action', 'astra-sites-get_deleted_post_ids' );
 		data.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		dispatch( {
@@ -540,7 +599,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		} );
 
 		const formOption = new FormData();
-		formOption.append( 'action', 'astra-sites-reset-posts' );
+		formOption.append( 'action', 'astra-sites-reset_posts' );
 		formOption.append( 'ids', JSON.stringify( chunk ) );
 		formOption.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
@@ -556,10 +615,13 @@ const ImportAiSite = ( { onClickNext } ) => {
 					const result = JSON.parse( text );
 					cloneData = result;
 					if ( result.success ) {
-						percentage += 2;
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage >= 50 ? 50 : percentage,
+							importPercent:
+								percentage.current >= 50
+									? 50
+									: percentage.current,
 						} );
 					} else {
 						throw result;
@@ -606,7 +668,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		} );
 
 		const customizerContent = new FormData();
-		customizerContent.append( 'action', 'astra-sites-backup-settings' );
+		customizerContent.append( 'action', 'astra-sites-backup_settings' );
 		customizerContent.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		const status = await fetch( ajaxurl, {
@@ -617,10 +679,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 			.then( ( text ) => {
 				const response = JSON.parse( text );
 				if ( response.success ) {
-					percentage += 2;
+					percentage.current += 2;
 					dispatch( {
 						type: 'set',
-						importPercent: percentage,
+						importPercent: percentage.current,
 					} );
 					return true;
 				}
@@ -652,7 +714,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		const customizerContent = new FormData();
 		customizerContent.append(
 			'action',
-			'astra-sites-reset-customizer-data'
+			'astra-sites-reset_customizer_data'
 		);
 		customizerContent.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
@@ -665,10 +727,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const response = JSON.parse( text );
 					if ( response.success ) {
-						percentage += 2;
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage,
+							importPercent: percentage.current,
 						} );
 						return true;
 					}
@@ -710,7 +772,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		} );
 
 		const siteOptions = new FormData();
-		siteOptions.append( 'action', 'astra-sites-reset-site-options' );
+		siteOptions.append( 'action', 'astra-sites-reset_site_options' );
 		siteOptions.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		const status = await fetch( ajaxurl, {
@@ -722,10 +784,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const data = JSON.parse( text );
 					if ( data.success ) {
-						percentage += 2;
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage,
+							importPercent: percentage.current,
 						} );
 						return true;
 					}
@@ -761,7 +823,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 */
 	const performResetWidget = async () => {
 		const widgets = new FormData();
-		widgets.append( 'action', 'astra-sites-reset-widgets-data' );
+		widgets.append( 'action', 'astra-sites-reset_widgets_data' );
 		widgets.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		dispatch( {
@@ -777,10 +839,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const response = JSON.parse( text );
 					if ( response.success ) {
-						percentage += 2;
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage,
+							importPercent: percentage.current,
 						} );
 						return true;
 					}
@@ -819,7 +881,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 */
 	const performResetTermsAndForms = async () => {
 		const formOption = new FormData();
-		formOption.append( 'action', 'astra-sites-reset-terms-and-forms' );
+		formOption.append( 'action', 'astra-sites-reset_terms_and_forms' );
 		formOption.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		dispatch( {
@@ -836,10 +898,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const response = JSON.parse( text );
 					if ( response.success ) {
-						percentage += 2;
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage,
+							importPercent: percentage.current,
 						} );
 						return true;
 					}
@@ -878,7 +940,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 */
 	const performResetPosts = async () => {
 		const data = new FormData();
-		data.append( 'action', 'astra-sites-get-deleted-post-ids' );
+		data.append( 'action', 'astra-sites-get_deleted_post_ids' );
 		data.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		dispatch( {
@@ -924,10 +986,11 @@ const ImportAiSite = ( { onClickNext } ) => {
 
 	const importCustomizerJson = async () => {
 		if ( ! customizerImportFlag ) {
-			percentage += 5;
+			percentage.current += 5;
 			dispatch( {
 				type: 'set',
-				importPercent: percentage >= 65 ? 65 : percentage,
+				importPercent:
+					percentage.current >= 65 ? 65 : percentage.current,
 			} );
 			return true;
 		}
@@ -937,7 +1000,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		} );
 
 		const forms = new FormData();
-		forms.append( 'action', 'astra-sites-import-customizer-settings' );
+		forms.append( 'action', 'astra-sites-import_customizer_settings' );
 		forms.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		const status = await fetch( ajaxurl, {
@@ -949,10 +1012,13 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const data = JSON.parse( text );
 					if ( data.success ) {
-						percentage += 5;
+						percentage.current += 5;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage >= 65 ? 65 : percentage,
+							importPercent:
+								percentage.current >= 65
+									? 65
+									: percentage.current,
 						} );
 						return true;
 					}
@@ -984,36 +1050,61 @@ const ImportAiSite = ( { onClickNext } ) => {
 		return status;
 	};
 
+	const downloadImages = async () => {
+		for ( let index = 0; index < selectedImages.length; index++ ) {
+			const formData = new FormData();
+			formData.append( 'action', 'astra-sites-download-image' );
+			formData.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
+			formData.append( 'index', index );
+			try {
+				dispatch( {
+					type: 'set',
+					importStatus: sprintf(
+						//translators: %s: Image number.
+						__( 'Downloading Image %s', 'astra-sites' ),
+						index + 1
+					),
+				} );
+
+				const response = await fetch( ajaxurl, {
+					method: 'POST',
+					body: formData,
+				} );
+
+				const data = await response.json();
+
+				if ( ! data.success ) {
+					report(
+						__( 'Downloading images failed.', 'astra-sites' ),
+						'',
+						''
+					);
+				}
+			} catch ( error ) {
+				report(
+					__( 'Downloading images failed.', 'astra-sites' ),
+					'',
+					error
+				);
+			}
+		}
+
+		return true;
+	};
+
 	/**
-	 * 5. Import Site Comtent XML.
+	 * 5. Import Site Content XML.
 	 */
 	const importSiteContent = async () => {
 		if ( ! contentImportFlag ) {
-			percentage += 20;
+			percentage.current += 20;
 			dispatch( {
 				type: 'set',
-				importPercent: percentage >= 80 ? 80 : percentage,
+				importPercent:
+					percentage.current >= 78 ? 78 : percentage.current,
 				xmlImportDone: true,
 			} );
 			return true;
-		}
-
-		const wxrUrl =
-			encodeURI( templateResponse[ 'astra-site-wxr-path' ] ) || '';
-		if ( 'null' === wxrUrl || '' === wxrUrl ) {
-			const errorTxt = __(
-				'The XML URL for the site content is empty.',
-				'astra-sites'
-			);
-			report(
-				__( 'Importing Site Content Failed', 'astra-sites' ),
-				'',
-				errorTxt,
-				'',
-				astraSitesVars.support_text,
-				wxrUrl
-			);
-			return false;
 		}
 
 		dispatch( {
@@ -1021,55 +1112,19 @@ const ImportAiSite = ( { onClickNext } ) => {
 			importStatus: __( 'Importing Site Content.', 'astra-sites' ),
 		} );
 
-		const content = new FormData();
-		content.append( 'action', 'astra-sites-import-prepare-xml' );
-		content.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
+		const wxr = await apiFetch( {
+			path: 'zipwp/v1/wxr',
+			method: 'POST',
+			data: {
+				template: selectedTemplate,
+				business_name: businessName,
+			},
+		} );
+		if ( wxr.success ) {
+			importXML( wxr.data );
+		}
 
-		const status = await fetch( ajaxurl, {
-			method: 'post',
-			body: content,
-		} )
-			.then( ( response ) => response.text() )
-			.then( ( text ) => {
-				try {
-					const data = JSON.parse( text );
-					percentage += 2;
-					dispatch( {
-						type: 'set',
-						importPercent: percentage >= 80 ? 80 : percentage,
-					} );
-					if ( false === data.success ) {
-						const errorMsg = data.data.error || data.data;
-						throw errorMsg;
-					} else {
-						importXML( data.data );
-					}
-					return true;
-				} catch ( error ) {
-					report(
-						__(
-							'Importing Site Content failed due to parse JSON error.',
-							'astra-sites'
-						),
-						'',
-						error,
-						'',
-						'',
-						text
-					);
-					return false;
-				}
-			} )
-			.catch( ( error ) => {
-				report(
-					__( 'Importing Site Content Failed.', 'astra-sites' ),
-					'',
-					error
-				);
-				return false;
-			} );
-
-		return status;
+		return true;
 	};
 
 	/**
@@ -1077,8 +1132,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 */
 	const importSpectraSettings = async () => {
 		const spectraSettings =
-			encodeURI( templateResponse[ 'astra-site-spectra-settings' ] ) ||
-			'';
+			templateResponse[ 'astra-site-spectra-options' ] || '';
 
 		if ( '' === spectraSettings || 'null' === spectraSettings ) {
 			return true;
@@ -1102,10 +1156,16 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const data = JSON.parse( text );
 					if ( data.success ) {
-						percentage += 2;
+						percentage.current =
+							percentage.current < 70
+								? 70
+								: percentage.current + 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage >= 75 ? 75 : percentage,
+							importPercent:
+								percentage.current >= 70
+									? 70
+									: percentage.current,
 						} );
 						return true;
 					}
@@ -1163,10 +1223,16 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const data = JSON.parse( text );
 					if ( data.success ) {
-						percentage += 2;
+						percentage.current =
+							percentage.current < 75
+								? 75
+								: percentage.current + 2;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage >= 75 ? 75 : percentage,
+							importPercent:
+								percentage.current >= 75
+									? 75
+									: percentage.current,
 						} );
 						return true;
 					}
@@ -1205,7 +1271,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 	const importXML = ( data ) => {
 		// Import XML though Event Source.
 		sseImport.data = data;
-		sseImport.render( dispatch, percentage );
+		sseImport.render( dispatch, percentage.current );
 
 		const evtSource = new EventSource( sseImport.data.url );
 		evtSource.onmessage = ( message ) => {
@@ -1236,15 +1302,17 @@ const ImportAiSite = ( { onClickNext } ) => {
 		};
 
 		evtSource.onerror = ( error ) => {
-			evtSource.close();
-			report(
-				__(
-					'Importing Site Content Failed. - Import Process Interrupted',
-					'astra-sites'
-				),
-				'',
-				error
-			);
+			if ( ! ( error && error?.isTrusted ) ) {
+				evtSource.close();
+				report(
+					__(
+						'Importing Site Content Failed. - Import Process Interrupted',
+						'astra-sites'
+					),
+					'',
+					error
+				);
+			}
 		};
 
 		evtSource.addEventListener( 'log', function ( message ) {
@@ -1277,7 +1345,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		} );
 
 		const siteOptions = new FormData();
-		siteOptions.append( 'action', 'astra-sites-import-options' );
+		siteOptions.append( 'action', 'astra-sites-import_options' );
 		siteOptions.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		const status = await fetch( ajaxurl, {
@@ -1289,10 +1357,10 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const data = JSON.parse( text );
 					if ( data.success ) {
-						percentage += 5;
+						percentage.current = 80;
 						dispatch( {
 							type: 'set',
-							importPercent: percentage >= 90 ? 90 : percentage,
+							importPercent: percentage.current,
 						} );
 						return true;
 					}
@@ -1329,9 +1397,11 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 */
 	const importWidgets = async () => {
 		if ( ! widgetImportFlag ) {
+			percentage.current += 3;
 			dispatch( {
 				type: 'set',
-				importPercent: 90,
+				importPercent:
+					percentage.current >= 83 ? 83 : percentage.current,
 			} );
 			return true;
 		}
@@ -1343,7 +1413,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		const widgetsData = templateResponse[ 'astra-site-widgets-data' ] || '';
 
 		const widgets = new FormData();
-		widgets.append( 'action', 'astra-sites-import-widgets' );
+		widgets.append( 'action', 'astra-sites-import_widgets' );
 		widgets.append( 'widgets_data', widgetsData );
 		widgets.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
@@ -1356,9 +1426,13 @@ const ImportAiSite = ( { onClickNext } ) => {
 				try {
 					const data = JSON.parse( text );
 					if ( data.success ) {
+						percentage.current += 2;
 						dispatch( {
 							type: 'set',
-							importPercent: 90,
+							importPercent:
+								percentage.current >= 85
+									? 85
+									: percentage.current,
 						} );
 						return true;
 					}
@@ -1395,11 +1469,11 @@ const ImportAiSite = ( { onClickNext } ) => {
 	const importDone = async () => {
 		dispatch( {
 			type: 'set',
-			importStatus: __( 'Final finishings.', 'astra-sites' ),
+			importStatus: __( 'Final finishing.', 'astra-sites' ),
 		} );
 
 		const finalSteps = new FormData();
-		finalSteps.append( 'action', 'astra-sites-import-end' );
+		finalSteps.append( 'action', 'astra-sites-import_end' );
 		finalSteps.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
 
 		const status = await fetch( ajaxurl, {
@@ -1413,20 +1487,26 @@ const ImportAiSite = ( { onClickNext } ) => {
 					if ( data.success ) {
 						localStorage.setItem( 'st-import-end', +new Date() );
 						setTimeout( function () {
+							percentage.current =
+								percentage.current < 90
+									? 90
+									: percentage.current;
 							dispatch( {
 								type: 'set',
-								importPercent: 95,
-								// importEnd: true,
+								importPercent:
+									percentage.current >= 90
+										? 90
+										: percentage.current,
 							} );
-							// setShowProgressBar( false );
 						}, successMessageDelay );
+
 						return true;
 					}
 					throw data.data;
 				} catch ( error ) {
 					report(
 						__(
-							'Final finishings failed due to parse JSON error.',
+							'Final finishing failed due to parse JSON error.',
 							'astra-sites'
 						),
 						'',
@@ -1436,12 +1516,14 @@ const ImportAiSite = ( { onClickNext } ) => {
 						text
 					);
 					setTimeout( function () {
+						percentage.current =
+							percentage.current > 90
+								? 90
+								: percentage.current + 1;
 						dispatch( {
 							type: 'set',
-							importPercent: 95,
-							// importEnd: true,
+							importPercent: percentage.current,
 						} );
-						// setShowProgressBar( false );
 					}, successMessageDelay );
 
 					localStorage.setItem( 'st-import-end', +new Date() );
@@ -1450,7 +1532,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 			} )
 			.catch( ( error ) => {
 				report(
-					__( 'Final finishings Failed.', 'astra-sites' ),
+					__( 'Final finishing Failed.', 'astra-sites' ),
 					'',
 					error
 				);
@@ -1467,14 +1549,15 @@ const ImportAiSite = ( { onClickNext } ) => {
 				path: `zipwp/v1/migration-status?uuid=${ websiteInfo.uuid }&token=${ randomToken }`,
 				method: 'GET',
 				headers: {
-					'content-type': 'application/json',
 					'X-WP-Nonce': astraSitesVars.rest_api_nonce,
 					_ajax_nonce: astraSitesVars._ajax_nonce,
 				},
 			} );
-			console.log( 'responsee: ', response );
 
 			if ( response?.data?.data === 'yes' ) {
+				// Save customizations.
+				await customizeWebsite();
+
 				dispatch( {
 					type: 'set',
 					importPercent: 100,
@@ -1483,12 +1566,25 @@ const ImportAiSite = ( { onClickNext } ) => {
 				setShowProgressBar( false );
 				return true;
 			} else if ( response?.data?.data === 'no' ) {
+				percentage.current += 2;
+				dispatch( {
+					type: 'set',
+					importPercent:
+						percentage.current >= 98 ? 98 : percentage.current,
+					importStatus: randomMessage.next()?.value,
+				} );
 				setTimeout( () => {
 					waitForFullMigration();
 				}, 10000 );
 			}
 		} catch ( error ) {
-			console.log( error );
+			percentage.current += 2;
+			dispatch( {
+				type: 'set',
+				importPercent:
+					percentage.current >= 98 ? 98 : percentage.current,
+				importStatus: randomMessage.next()?.value,
+			} );
 			setTimeout( () => {
 				waitForFullMigration();
 			}, 10000 );
@@ -1506,9 +1602,9 @@ const ImportAiSite = ( { onClickNext } ) => {
 	};
 
 	useEffect( () => {
-		window.addEventListener('beforeunload', preventRefresh); // eslint-disable-line
+		window.addEventListener( 'beforeunload', preventRefresh ); // eslint-disable-line
 		return () => {
-		  window.removeEventListener('beforeunload', preventRefresh); // eslint-disable-line
+			window.removeEventListener( 'beforeunload', preventRefresh ); // eslint-disable-line
 		};
 	}, [ importPercent ] ); // Add importPercent as a dependency.
 
@@ -1526,30 +1622,25 @@ const ImportAiSite = ( { onClickNext } ) => {
 	 */
 	useEffect( () => {
 		if ( tryAgainCount > 0 ) {
-			checkRequiredPlugins( storedState );
+			dispatch( {
+				type: 'set',
+				importPercent: 0,
+				importStatus: __( 'Retrying Import.', 'astra-sites' ),
+			} );
+			handleImport();
 		}
 	}, [ tryAgainCount ] );
 
-	const callExportWithRetry = async () => {
-		while ( true ) {
-			try {
-				const response = await exportAiSite( websiteInfo.uuid );
+	const setStartFlag = async () => {
+		const content = new FormData();
+		content.append( 'action', 'astra-sites-set_start_flag' );
+		content.append( '_ajax_nonce', astraSitesVars._ajax_nonce );
+		content.append( 'uuid', websiteInfo.uuid );
 
-				// Get response data
-				const data = await response.json();
-
-				// If response is successful, return the data
-				if ( response.ok && data?.success ) {
-					return data;
-				}
-			} catch ( error ) {
-				// Handle any other errors that occur during the API call
-				console.error( 'Error occurred while fetching API:', error );
-			}
-
-			// If the response is not successful, wait for 5 seconds and loop again
-			await new Promise( ( resolve ) => setTimeout( resolve, 5000 ) );
-		}
+		await fetch( ajaxurl, {
+			method: 'post',
+			body: content,
+		} );
 	};
 
 	const handleImport = async () => {
@@ -1566,35 +1657,34 @@ const ImportAiSite = ( { onClickNext } ) => {
 				),
 			} );
 
-			// Prepare the site for import.
-			await callExportWithRetry();
-
-			percentage += 2;
+			percentage.current += 2;
 
 			dispatch( {
 				type: 'set',
 				importStart: true,
-				importPercent: percentage,
+				importPercent: percentage.current,
 				importStatus: __(
 					'Preparing your site for import…',
 					'astra-sites'
 				),
 			} );
+
+			await setStartFlag();
 			setIsReadyForImport( true );
 		}
 	};
 
 	const handleImportStart = async () => {
 		// Get the import data from the AI site.
-		await getAiDemo( websiteInfo.url, websiteInfo.uuid, storedState );
+		await getAiDemo( stepsData, storedState, websiteInfo );
 		await checkRequiredPlugins( storedState );
 		checkFileSystemPermissions( storedState );
 
-		percentage += 3;
+		percentage.current += 3;
 
 		dispatch( {
 			type: 'set',
-			importPercent: percentage,
+			importPercent: percentage.current,
 			importStatus: __( 'Starting Import.', 'astra-sites' ),
 		} );
 
@@ -1607,6 +1697,28 @@ const ImportAiSite = ( { onClickNext } ) => {
 			} );
 		}
 		sendReportFlag = false;
+	};
+
+	const tryAainCallback = () => {
+		dispatch( {
+			type: 'set',
+			// Reset errors.
+			importErrorMessages: {},
+			importErrorResponse: [],
+			importError: false,
+			// Try again count.
+			tryAgainCount: tryAgainCount + 1,
+			// Reset import flags.
+			xmlImportDone: false,
+			resetData: [],
+			importStart: false,
+			importEnd: false,
+			importPercent: 0,
+			requiredPluginsDone: false,
+			themeStatus: false,
+			notInstalledList: [],
+			notActivatedList: [],
+		} );
 	};
 
 	/**
@@ -1641,7 +1753,7 @@ const ImportAiSite = ( { onClickNext } ) => {
 		if ( themeStatus ) {
 			installRequiredPlugins();
 		}
-	}, [ themeStatus ] );
+	}, [ themeStatus, tryAgainCount ] );
 
 	/**
 	 * Start Part 2 of the import once the XML is imported sucessfully.
@@ -1654,87 +1766,55 @@ const ImportAiSite = ( { onClickNext } ) => {
 
 	// This checks if all the required plugins are installed and activated.
 	useEffect( () => {
+		if ( ! requiredPlugins ) {
+			return;
+		}
 		if ( notActivatedList.length <= 0 && notInstalledList.length <= 0 ) {
 			dispatch( {
 				type: 'set',
 				requiredPluginsDone: true,
 			} );
 		}
-	}, [ notActivatedList.length, notInstalledList.length ] );
+	}, [
+		notActivatedList.length,
+		notInstalledList.length,
+		requiredPlugins,
+		tryAgainCount,
+	] );
 
 	// Whenever a plugin is installed, this code sends an activation request.
 	useEffect( () => {
+		if ( ! requiredPlugins ) {
+			return;
+		}
 		// Installed all required plugins.
 		if ( notActivatedList.length > 0 ) {
 			activatePlugin( notActivatedList[ 0 ] );
 		}
-	}, [ notActivatedList.length ] );
+	}, [ notActivatedList.length, requiredPlugins ] );
 
-	// return (
-	// 	<DefaultStep
-	// 		content={
-	// 			<div className="middle-content middle-content-import">
-	// 				<>
-	// 					{ importPercent === 100 ? (
-	// 						<h1 className="import-done-congrats">
-	// 							{ __( 'Congratulations', 'astra-sites' ) }
-	// 							<span>{ ICONS.tada }</span>
-	// 						</h1>
-	// 					) : (
-	// 						<h1>
-	// 							{ __(
-	// 								'We are building your website…',
-	// 								'astra-sites'
-	// 							) }
-	// 						</h1>
-	// 					) }
-	// 					{ importError && (
-	// 						<div className="ist-import-process-step-wrap">
-	// 							<ErrorScreen />
-	// 						</div>
-	// 					) }
-	// 					{ ! importError && (
-	// 						<>
-	// 							<div className="ist-import-process-step-wrap">
-	// 								<ImportLoader />
-	// 							</div>
-	// 							{ importPercent !== 100 && (
-	// 								<Lottie
-	// 									loop
-	// 									animationData={ lottieJson }
-	// 									play
-	// 									style={ {
-	// 										height: 400,
-	// 										margin: '-70px auto -90px auto',
-	// 									} }
-	// 								/>
-	// 							) }
-	// 						</>
-	// 					) }
-	// 				</>
-	// 			</div>
-	// 		}
-	// 		actions={
-	// 			<>
-	// 				<PreviousStepLink before disabled customizeStep={ true }>
-	// 					{ __( 'Back', 'astra-sites' ) }
-	// 				</PreviousStepLink>
-	// 			</>
-	// 		}
-	// 	/>
-	// );
+	// Confirmation before leaving the page.
+	useEffect( () => {
+		const handleBeforeUnload = () => importPercent < 100;
+		window.onbeforeunload = handleBeforeUnload;
+
+		return () => {
+			window.onbeforeunload = null;
+		};
+	}, [ importPercent ] );
+
 	return (
 		<>
-			<div className="flex flex-col items-center justify-center w-full h-screen gap-y-4">
+			<div className="flex flex-1 flex-col items-center justify-center w-full gap-y-4 pb-10">
 				<div className="flex items-center justify-center gap-x-6">
 					{ showProgressBar && ! importError && (
 						<CircularProgressBar
 							colorCircle="#3d45921a"
-							colorSlice={ importError ? '#EF4444' : '#2563EB' }
+							colorSlice={ importError ? '#EF4444' : '#3D4592' }
 							percent={ importPercent }
 							round
 							speed={
-								importError || status === 'retrying' ? 0 : 15
+								importError || status === 'retrying' ? 0 : 15 //eslint-disable-line
 							}
 							fontColor="#0F172A"
 							fontSize="18px"
@@ -1743,29 +1823,38 @@ const ImportAiSite = ( { onClickNext } ) => {
 						/>
 					) }
 					{ importError && (
-						<ExclamationTriangleIcon className="w-16 h-16 mt-2 cursor-pointer text-alert-error" />
+						<ErrorModel
+							error={ importErrorMessages }
+							websiteInfo={ websiteInfo }
+							tryAgainCallback={ tryAainCallback }
+						/>
 					) }
 					<div className="flex flex-col">
-						{ ! importEnd && (
+						{ ! importEnd && ! importError && (
 							<h4>
-								{ importError
-									? 'Something went wrong'
-									: 'We are importing your website...' }
+								{ __(
+									'We are importing your website…',
+									'astra-sites'
+								) }
 							</h4>
 						) }
-						<p className="zw-sm-normal text-app-text w-[300px]">
-							<ImportLoaderAi onClickNext={ onClickNext } />
-						</p>
+						{ ! importError && (
+							<div className="zw-sm-normal text-app-text w-[350px]">
+								<ImportLoaderAi onClickNext={ onClickNext } />
+							</div>
+						) }
 					</div>
 				</div>
 				{ ! importError && (
-					<div className="relative flex items-center justify-center px-10 py-6 h-120 w-120 bg-loading-website-grid-texture">
-						<img
-							className="w-[30rem] h-[20.875rem]"
-							src={ `${ imageDir }/build-with-ai/migrate.svg` }
-							alt={ __( 'Migrating', 'astra-sites' ) }
-						/>
-					</div>
+					<>
+						<div className="relative flex items-center justify-center px-10 py-6 h-120 w-120 bg-loading-website-grid-texture">
+							<img
+								className="w-[30rem] h-[20.875rem]"
+								src={ `${ imageDir }/build-with-ai/migrate.svg` }
+								alt={ __( 'Migrating', 'astra-sites' ) }
+							/>
+						</div>
+					</>
 				) }
 			</div>
 		</>

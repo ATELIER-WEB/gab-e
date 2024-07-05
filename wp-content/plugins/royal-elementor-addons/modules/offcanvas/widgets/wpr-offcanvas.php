@@ -252,9 +252,18 @@ class Wpr_Offcanvas extends Widget_Base {
 			return '';
 		}
 
+		if ( defined('ICL_LANGUAGE_CODE') ) {
+			$default_language_code = apply_filters('wpml_default_language', null);
+
+			if ( ICL_LANGUAGE_CODE !== $default_language_code ) {
+				$id = icl_object_id($id, 'elementor_library', false, ICL_LANGUAGE_CODE);
+			}
+		}
+
 		$edit_link = '<span class="wpr-template-edit-btn" data-permalink="'. get_permalink( $id ) .'">Edit Template</span>';
 		
 		$type = get_post_meta(get_the_ID(), '_wpr_template_type', true);
+
 		$has_css = 'internal' === get_option( 'elementor_css_print_method' ) || '' !== $type;
 
 		return Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $id, $has_css ) . $edit_link;
@@ -766,6 +775,31 @@ class Wpr_Offcanvas extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'offcanvas_close_icon_bg_color',
+			[
+				'label' => esc_html__( 'Background Color', 'wpr-addons' ),
+				'type' => Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .wpr-close-offcanvas' => 'background-color: {{VALUE}};',
+					'.wpr-offcanvas-wrap-{{ID}} .wpr-close-offcanvas' => 'background-color: {{VALUE}};'
+				],
+			]
+		);
+
+		$this->add_control(
+			'offcanvas_close_icon_border_color',
+			[
+				'label' => esc_html__( 'Border Color', 'wpr-addons' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '#FFF',
+				'selectors' => [
+					'{{WRAPPER}} .wpr-close-offcanvas' => 'border-color: {{VALUE}};',
+					'.wpr-offcanvas-wrap-{{ID}} .wpr-close-offcanvas' => 'border-color: {{VALUE}};'
+				],
+			]
+		);
+
 		$this->add_responsive_control(
 			'offcanvas_close_icon_font_size',
 			[
@@ -789,6 +823,89 @@ class Wpr_Offcanvas extends Widget_Base {
 					'.wpr-offcanvas-wrap-{{ID}} .wpr-close-offcanvas svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};'
 				]
 			]
+		);
+
+		$this->add_responsive_control(
+			'offcanvas_close_icon_box_size',
+			[
+				'label' => esc_html__( 'Box Size', 'wpr-addons' ),
+				'type' => Controls_Manager::SLIDER,
+				'size_units' => [ 'px', ],
+				'range' => [
+					'px' => [
+						'min' => 5,
+						'max' => 50,
+					],
+				],
+				'default' => [
+					'unit' => 'px',
+					'size' => 12,
+				],
+				'selectors' => [
+					'{{WRAPPER}} .wpr-close-offcanvas' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+					'.wpr-offcanvas-wrap-{{ID}} .wpr-close-offcanvas' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};'
+				]
+			]
+		);
+
+		$this->add_control(
+			'offcanvas_close_icon_border_style',
+			[
+				'label' => esc_html__( 'Border Type', 'wpr-addons' ),
+				'type' => Controls_Manager::SELECT,
+				'separator' => 'before',
+				'options' => [
+					'none' => esc_html__( 'None', 'wpr-addons' ),
+					'solid' => esc_html__( 'Solid', 'wpr-addons' ),
+					'double' => esc_html__( 'Double', 'wpr-addons' ),
+					'dotted' => esc_html__( 'Dotted', 'wpr-addons' ),
+					'dashed' => esc_html__( 'Dashed', 'wpr-addons' ),
+					'groove' => esc_html__( 'Groove', 'wpr-addons' ),
+				],
+				'default' => 'none',
+				'selectors' => [
+					'{{WRAPPER}} .wpr-close-offcanvas' => 'border-style: {{VALUE}};',
+					'.wpr-offcanvas-wrap-{{ID}}  .wpr-close-offcanvas' => 'border-style: {{VALUE}};'
+				]
+			]
+		);
+	
+		$this->add_responsive_control(
+				'offcanvas_close_icon_border_width',
+				[
+					'label' => esc_html__( 'Border Width', 'wpr-addons' ),
+					'type' => Controls_Manager::DIMENSIONS,
+					'size_units' => [ 'px', '%' ],
+					'default' => [
+						'top' => 2,
+						'right' => 2,
+						'bottom' => 2,
+						'left' => 2,
+					],
+					'selectors' => [
+						'{{WRAPPER}} .wpr-close-offcanvas' => 'border-width: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+						'.wpr-offcanvas-wrap-{{ID}} .wpr-close-offcanvas' => 'border-width: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'
+					]
+				]
+		);
+	
+		$this->add_responsive_control(
+				'offcanvas_close_icon_border_radius',
+				[
+					'label' => esc_html__( 'Border Radius', 'wpr-addons' ),
+					'type' => Controls_Manager::DIMENSIONS,
+					'size_units' => [ 'px', '%' ],
+					'default' => [
+						'top' => 2,
+						'right' => 2,
+						'bottom' => 2,
+						'left' => 2,
+					],
+					'selectors' => [
+						'{{WRAPPER}} .wpr-close-offcanvas' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+						'.wpr-offcanvas-wrap-{{ID}} .wpr-close-offcanvas' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'
+					]
+				]
 		);
 
 		$this->add_control(
@@ -1086,8 +1203,8 @@ class Wpr_Offcanvas extends Widget_Base {
 				<?php endif; ?>
 			</button>
 
-			<div class="wpr-offcanvas-wrap wpr-offcanvas-wrap-<?php echo $settings['offcanvas_position'] ?>">
-				<div class="wpr-offcanvas-content wpr-offcanvas-content-<?php echo $settings['offcanvas_position'] ?>">
+			<div class="wpr-offcanvas-wrap wpr-offcanvas-wrap-<?php echo esc_attr( $settings['offcanvas_position'] ) ?>">
+				<div class="wpr-offcanvas-content wpr-offcanvas-content-<?php echo esc_attr( $settings['offcanvas_position'] ) ?>">
 					<div class="wpr-offcanvas-header">
 						<span class="wpr-close-offcanvas">
 							<i class="fa fa-times" aria-hidden="true"></i>
